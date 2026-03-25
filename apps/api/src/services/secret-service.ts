@@ -67,10 +67,21 @@ export async function retrieveSecret(name: string, scope = "global"): Promise<st
   return decrypt(secret.encryptedValue, secret.iv, secret.authTag);
 }
 
-export async function listSecrets(scope?: string): Promise<SecretRef[]> {
-  const query = scope
-    ? db.select().from(secrets).where(eq(secrets.scope, scope))
-    : db.select().from(secrets);
+export async function listSecrets(
+  scope?: string,
+  workspaceId?: string | null,
+): Promise<SecretRef[]> {
+  const conditions = [];
+  if (scope) conditions.push(eq(secrets.scope, scope));
+  if (workspaceId) conditions.push(eq(secrets.workspaceId, workspaceId));
+
+  const query =
+    conditions.length > 0
+      ? db
+          .select()
+          .from(secrets)
+          .where(and(...conditions))
+      : db.select().from(secrets);
   const rows = await query;
   return rows.map((r) => ({
     id: r.id,

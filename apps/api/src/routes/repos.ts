@@ -42,8 +42,9 @@ const updateRepoSchema = z.object({
 });
 
 export async function repoRoutes(app: FastifyInstance) {
-  app.get("/api/repos", async (_req, reply) => {
-    const repos = await repoService.listRepos();
+  app.get("/api/repos", async (req, reply) => {
+    const workspaceId = req.user?.workspaceId ?? null;
+    const repos = await repoService.listRepos(workspaceId);
     reply.send({ repos });
   });
 
@@ -56,7 +57,10 @@ export async function repoRoutes(app: FastifyInstance) {
 
   app.post("/api/repos", async (req, reply) => {
     const body = createRepoSchema.parse(req.body);
-    const repo = await repoService.createRepo(body);
+    const repo = await repoService.createRepo({
+      ...body,
+      workspaceId: req.user?.workspaceId ?? null,
+    });
 
     // Auto-detect image preset and test command
     try {

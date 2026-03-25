@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "../db/client.js";
 import { repos } from "../db/schema.js";
 import { normalizeRepoUrl } from "@optio/shared";
@@ -39,7 +39,12 @@ export interface RepoRecord {
   updatedAt: Date;
 }
 
-export async function listRepos(): Promise<RepoRecord[]> {
+export async function listRepos(workspaceId?: string | null): Promise<RepoRecord[]> {
+  if (workspaceId) {
+    return db.select().from(repos).where(eq(repos.workspaceId, workspaceId)) as Promise<
+      RepoRecord[]
+    >;
+  }
   return db.select().from(repos) as Promise<RepoRecord[]>;
 }
 
@@ -59,6 +64,7 @@ export async function createRepo(data: {
   fullName: string;
   defaultBranch?: string;
   isPrivate?: boolean;
+  workspaceId?: string | null;
 }): Promise<RepoRecord> {
   const [repo] = await db
     .insert(repos)
@@ -67,6 +73,7 @@ export async function createRepo(data: {
       fullName: data.fullName,
       defaultBranch: data.defaultBranch ?? "main",
       isPrivate: data.isPrivate ?? false,
+      workspaceId: data.workspaceId ?? undefined,
     })
     .onConflictDoUpdate({
       target: repos.repoUrl,

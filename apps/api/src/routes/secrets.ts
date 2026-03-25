@@ -12,7 +12,8 @@ export async function secretRoutes(app: FastifyInstance) {
   // List secrets (names only)
   app.get("/api/secrets", async (req, reply) => {
     const query = req.query as { scope?: string };
-    const secrets = await secretService.listSecrets(query.scope);
+    const workspaceId = req.user?.workspaceId ?? null;
+    const secrets = await secretService.listSecrets(query.scope, workspaceId);
     reply.send({ secrets });
   });
 

@@ -70,7 +70,7 @@ function formatMemoryGi(ki: number): string {
 
 export async function clusterRoutes(app: FastifyInstance) {
   // Cluster overview: nodes, all pods, services, resource summary
-  app.get("/api/cluster/overview", async (_req, reply) => {
+  app.get("/api/cluster/overview", async (req, reply) => {
     try {
       const api = getK8sApi();
 
@@ -190,8 +190,11 @@ export async function clusterRoutes(app: FastifyInstance) {
           lastTimestamp: e.lastTimestamp ?? e.metadata?.creationTimestamp,
         }));
 
-      // Get Optio-specific data
-      const repoPodRecords = await db.select().from(repoPods);
+      // Get Optio-specific data (scoped to workspace if available)
+      const workspaceId = req.user?.workspaceId;
+      const repoPodRecords = workspaceId
+        ? await db.select().from(repoPods).where(eq(repoPods.workspaceId, workspaceId))
+        : await db.select().from(repoPods);
 
       // Get per-repo task indicators: queued counts and maxConcurrentTasks
       const repoUrls = repoPodRecords.map((rp) => rp.repoUrl);

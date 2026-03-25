@@ -12,6 +12,59 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 
+// ── Workspace enums ─────────────────────────────────────────────────────────
+
+export const workspaceRoleEnum = pgEnum("workspace_role", ["admin", "member", "viewer"]);
+
+// ── Users (defined early for FK references) ─────────────────────────────────
+
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  provider: text("provider").notNull(), // "github" | "google" | "gitlab"
+  externalId: text("external_id").notNull(),
+  email: text("email").notNull(),
+  displayName: text("display_name").notNull(),
+  avatarUrl: text("avatar_url"),
+  defaultWorkspaceId: uuid("default_workspace_id"), // last-used workspace
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ── Workspaces ──────────────────────────────────────────────────────────────
+
+export const workspaces = pgTable("workspaces", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  createdBy: uuid("created_by"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const workspaceMembers = pgTable(
+  "workspace_members",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: workspaceRoleEnum("role").notNull().default("member"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    unique("workspace_members_workspace_user_key").on(table.workspaceId, table.userId),
+    index("workspace_members_user_idx").on(table.userId),
+    index("workspace_members_workspace_idx").on(table.workspaceId),
+  ],
+);
+
+// ── Task enums ──────────────────────────────────────────────────────────────
+
 export const taskStateEnum = pgEnum("task_state", [
   "pending",
   "queued",
@@ -61,6 +114,7 @@ export const tasks = pgTable(
     worktreeState: text("worktree_state"), // "active" | "dirty" | "reset" | "preserved" | "removed"
     lastPodId: uuid("last_pod_id"), // last pod this task ran on (for same-pod retry affinity)
     createdBy: uuid("created_by"), // nullable FK to users (null when auth is disabled)
+    workspaceId: uuid("workspace_id"), // nullable for backward compat; new tasks should always set this
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     startedAt: timestamp("started_at", { withTimezone: true }),
@@ -71,6 +125,7 @@ export const tasks = pgTable(
     index("tasks_state_idx").on(table.state),
     index("tasks_parent_task_id_idx").on(table.parentTaskId),
     index("tasks_created_at_idx").on(table.createdAt.desc()),
+    index("tasks_workspace_id_idx").on(table.workspaceId),
   ],
 );
 
@@ -122,6 +177,7 @@ export const secrets = pgTable(
     encryptedValue: bytea("encrypted_value").notNull(),
     iv: bytea("iv").notNull(),
     authTag: bytea("auth_tag").notNull(),
+    workspaceId: uuid("workspace_id"), // nullable for backward compat
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -131,6 +187,7 @@ export const secrets = pgTable(
 export const repos = pgTable("repos", {
   id: uuid("id").primaryKey().defaultRandom(),
   repoUrl: text("repo_url").notNull().unique(),
+  workspaceId: uuid("workspace_id"), // nullable for backward compat
   fullName: text("full_name").notNull(),
   defaultBranch: text("default_branch").notNull().default("main"),
   isPrivate: boolean("is_private").notNull().default(false),
@@ -185,6 +242,7 @@ export const repoPods = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     repoUrl: text("repo_url").notNull(),
+    workspaceId: uuid("workspace_id"), // nullable for backward compat
     repoBranch: text("repo_branch").notNull().default("main"),
     instanceIndex: integer("instance_index").notNull().default(0),
     podName: text("pod_name"),
@@ -209,18 +267,6 @@ export const podHealthEvents = pgTable("pod_health_events", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  provider: text("provider").notNull(), // "github" | "google" | "gitlab"
-  externalId: text("external_id").notNull(),
-  email: text("email").notNull(),
-  displayName: text("display_name").notNull(),
-  avatarUrl: text("avatar_url"),
-  lastLoginAt: timestamp("last_login_at", { withTimezone: true }).notNull().defaultNow(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
 export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id")
@@ -242,6 +288,7 @@ export const webhookEventEnum = pgEnum("webhook_event", [
 export const webhooks = pgTable("webhooks", {
   id: uuid("id").primaryKey().defaultRandom(),
   url: text("url").notNull(),
+  workspaceId: uuid("workspace_id"), // nullable for backward compat
   events: jsonb("events").$type<string[]>().notNull(), // array of webhook_event values
   secret: text("secret"), // HMAC-SHA256 signing secret (plaintext; only used for outbound signing)
   description: text("description"),

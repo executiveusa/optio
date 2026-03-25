@@ -23,11 +23,14 @@ export async function issueRoutes(app: FastifyInstance) {
       Accept: "application/vnd.github.v3+json",
     };
 
-    // Get repos to fetch issues from
+    // Get repos to fetch issues from (scoped to workspace)
+    const workspaceId = req.user?.workspaceId;
     let repoList;
     if (query.repoId) {
       const [repo] = await db.select().from(repos).where(eq(repos.id, query.repoId));
       repoList = repo ? [repo] : [];
+    } else if (workspaceId) {
+      repoList = await db.select().from(repos).where(eq(repos.workspaceId, workspaceId));
     } else {
       repoList = await db.select().from(repos);
     }
@@ -187,6 +190,7 @@ export async function issueRoutes(app: FastifyInstance) {
       ticketSource: "github",
       ticketExternalId: String(body.issueNumber),
       metadata: { issueUrl: `https://github.com/${owner}/${repoName}/issues/${body.issueNumber}` },
+      workspaceId: req.user?.workspaceId ?? null,
     });
 
     await taskServiceModule.transitionTask(task.id, TaskState.QUEUED, "issue_assigned");
