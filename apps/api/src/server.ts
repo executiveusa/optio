@@ -17,8 +17,10 @@ import { issueRoutes } from "./routes/issues.js";
 import { subtaskRoutes } from "./routes/subtasks.js";
 import { analyticsRoutes } from "./routes/analytics.js";
 import { webhookRoutes } from "./routes/webhooks.js";
+import { sessionRoutes } from "./routes/sessions.js";
 import { logStreamWs } from "./ws/log-stream.js";
 import { eventsWs } from "./ws/events.js";
+import { sessionTerminalWs } from "./ws/session-terminal.js";
 import authPlugin from "./plugins/auth.js";
 
 const loggerConfig =
@@ -67,10 +69,12 @@ export async function buildServer() {
   await app.register(subtaskRoutes);
   await app.register(analyticsRoutes);
   await app.register(webhookRoutes);
+  await app.register(sessionRoutes);
 
   // WebSocket routes
   await app.register(logStreamWs);
   await app.register(eventsWs);
+  await app.register(sessionTerminalWs);
 
   // Global error handler for Zod validation
   app.setErrorHandler((error: FastifyError | Error, _req, reply) => {
