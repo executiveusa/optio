@@ -8,6 +8,12 @@ export default defineConfig({
       reportsDirectory: "./coverage",
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts", "src/**/*.spec.ts", "src/db/migrations/**", "src/index.ts"],
+      thresholds: {
+        lines: 25,
+        branches: 50,
+        functions: 25,
+        statements: 25,
+      },
     },
   },
 });
