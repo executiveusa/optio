@@ -607,15 +607,15 @@ export const api = {
     },
   ) =>
     request<{ workflow: any }>(`/api/workflows/${id}`, {
-      method: "PUT",
+      method: "PATCH",
       body: JSON.stringify(data),
     }),
 
   deleteWorkflow: (id: string) => request(`/api/workflows/${id}`, { method: "DELETE" }),
 
   executeWorkflow: (data: { workflowId: string; repoUrl: string; repoBranch?: string }) =>
-    request<{ workflowId: string; tasks: any[] }>("/api/workflows/execute", {
+    request<{ workflowId: string; tasks: any[] }>(`/api/workflows/${data.workflowId}/execute`, {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ repoUrl: data.repoUrl, repoBranch: data.repoBranch }),
     }),
 };
