@@ -1,10 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import {
-  handleSlackAction,
-  sendSlackNotification,
-  buildSlackMessage,
-} from "../services/slack-service.js";
+import { handleSlackAction, sendSlackNotification } from "../services/slack-service.js";
 import { logger } from "../logger.js";
 
 export async function slackRoutes(app: FastifyInstance) {

@@ -1,5 +1,6 @@
 import Fastify, { type FastifyError } from "fastify";
 import cors from "@fastify/cors";
+import formbody from "@fastify/formbody";
 import rateLimit from "@fastify/rate-limit";
 import websocket from "@fastify/websocket";
 import { healthRoutes } from "./routes/health.js";
@@ -51,6 +52,7 @@ export async function buildServer() {
     timeWindow: "1 minute",
     allowList: ["127.0.0.1", "::1"],
   });
+  await app.register(formbody);
   await app.register(websocket);
 
   // Auth plugin (validates session cookie on protected routes)
