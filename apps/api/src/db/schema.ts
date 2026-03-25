@@ -181,45 +181,49 @@ export const secrets = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [unique("secrets_name_scope_key").on(table.name, table.scope)],
+  (table) => [unique("secrets_name_scope_ws_key").on(table.name, table.scope, table.workspaceId)],
 );
 
-export const repos = pgTable("repos", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  repoUrl: text("repo_url").notNull().unique(),
-  workspaceId: uuid("workspace_id"), // nullable for backward compat
-  fullName: text("full_name").notNull(),
-  defaultBranch: text("default_branch").notNull().default("main"),
-  isPrivate: boolean("is_private").notNull().default(false),
-  imagePreset: text("image_preset").default("base"),
-  extraPackages: text("extra_packages"), // comma-separated
-  setupCommands: text("setup_commands"), // shell commands run at pod startup after clone
-  customDockerfile: text("custom_dockerfile"), // full Dockerfile override (advanced)
-  autoMerge: boolean("auto_merge").notNull().default(false),
-  promptTemplateOverride: text("prompt_template_override"), // null = use global default
-  claudeModel: text("claude_model").default("opus"),
-  claudeContextWindow: text("claude_context_window").default("1m"), // "200k" or "1m"
-  claudeThinking: boolean("claude_thinking").notNull().default(true),
-  claudeEffort: text("claude_effort").default("high"), // "low", "medium", "high"
-  maxTurnsCoding: integer("max_turns_coding"), // null = use global default (250)
-  maxTurnsReview: integer("max_turns_review"), // null = use global default (10)
-  autoResume: boolean("auto_resume").notNull().default(false),
-  maxConcurrentTasks: integer("max_concurrent_tasks").notNull().default(2),
-  maxPodInstances: integer("max_pod_instances").notNull().default(1),
-  maxAgentsPerPod: integer("max_agents_per_pod").notNull().default(2),
-  reviewEnabled: boolean("review_enabled").notNull().default(false),
-  reviewTrigger: text("review_trigger").default("on_ci_pass"), // "manual" | "on_pr" | "on_ci_pass"
-  reviewPromptTemplate: text("review_prompt_template"), // null = use default
-  testCommand: text("test_command"), // "npm test", "cargo test", etc.
-  reviewModel: text("review_model").default("sonnet"), // can use cheaper model for reviews
-  maxAutoResumes: integer("max_auto_resumes"), // null = use OPTIO_MAX_AUTO_RESUMES env var or default (10)
-  slackWebhookUrl: text("slack_webhook_url"), // Slack incoming webhook URL
-  slackChannel: text("slack_channel"), // override channel (optional)
-  slackNotifyOn: jsonb("slack_notify_on").$type<string[]>(), // e.g. ["completed","failed","pr_opened","needs_attention"]
-  slackEnabled: boolean("slack_enabled").notNull().default(false),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const repos = pgTable(
+  "repos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    repoUrl: text("repo_url").notNull(),
+    workspaceId: uuid("workspace_id"), // nullable for backward compat
+    fullName: text("full_name").notNull(),
+    defaultBranch: text("default_branch").notNull().default("main"),
+    isPrivate: boolean("is_private").notNull().default(false),
+    imagePreset: text("image_preset").default("base"),
+    extraPackages: text("extra_packages"), // comma-separated
+    setupCommands: text("setup_commands"), // shell commands run at pod startup after clone
+    customDockerfile: text("custom_dockerfile"), // full Dockerfile override (advanced)
+    autoMerge: boolean("auto_merge").notNull().default(false),
+    promptTemplateOverride: text("prompt_template_override"), // null = use global default
+    claudeModel: text("claude_model").default("opus"),
+    claudeContextWindow: text("claude_context_window").default("1m"), // "200k" or "1m"
+    claudeThinking: boolean("claude_thinking").notNull().default(true),
+    claudeEffort: text("claude_effort").default("high"), // "low", "medium", "high"
+    maxTurnsCoding: integer("max_turns_coding"), // null = use global default (250)
+    maxTurnsReview: integer("max_turns_review"), // null = use global default (10)
+    autoResume: boolean("auto_resume").notNull().default(false),
+    maxConcurrentTasks: integer("max_concurrent_tasks").notNull().default(2),
+    maxPodInstances: integer("max_pod_instances").notNull().default(1),
+    maxAgentsPerPod: integer("max_agents_per_pod").notNull().default(2),
+    reviewEnabled: boolean("review_enabled").notNull().default(false),
+    reviewTrigger: text("review_trigger").default("on_ci_pass"), // "manual" | "on_pr" | "on_ci_pass"
+    reviewPromptTemplate: text("review_prompt_template"), // null = use default
+    testCommand: text("test_command"), // "npm test", "cargo test", etc.
+    reviewModel: text("review_model").default("sonnet"), // can use cheaper model for reviews
+    maxAutoResumes: integer("max_auto_resumes"), // null = use OPTIO_MAX_AUTO_RESUMES env var or default (10)
+    slackWebhookUrl: text("slack_webhook_url"), // Slack incoming webhook URL
+    slackChannel: text("slack_channel"), // override channel (optional)
+    slackNotifyOn: jsonb("slack_notify_on").$type<string[]>(), // e.g. ["completed","failed","pr_opened","needs_attention"]
+    slackEnabled: boolean("slack_enabled").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [unique("repos_url_workspace_key").on(table.repoUrl, table.workspaceId)],
+);
 
 export const ticketProviders = pgTable("ticket_providers", {
   id: uuid("id").primaryKey().defaultRandom(),

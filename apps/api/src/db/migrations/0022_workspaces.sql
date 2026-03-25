@@ -43,6 +43,16 @@ ALTER TABLE "users" ADD COLUMN "default_workspace_id" uuid;
 -- Add indexes for workspace-scoped queries
 CREATE INDEX IF NOT EXISTS "tasks_workspace_id_idx" ON "tasks" USING btree ("workspace_id");
 
+-- Update unique constraints to include workspace_id
+-- Drop old constraints and replace with workspace-scoped ones
+ALTER TABLE "secrets" DROP CONSTRAINT IF EXISTS "secrets_name_scope_key";
+--> statement-breakpoint
+ALTER TABLE "secrets" ADD CONSTRAINT "secrets_name_scope_ws_key" UNIQUE("name", "scope", "workspace_id");
+--> statement-breakpoint
+ALTER TABLE "repos" DROP CONSTRAINT IF EXISTS "repos_repo_url_unique";
+--> statement-breakpoint
+ALTER TABLE "repos" ADD CONSTRAINT "repos_url_workspace_key" UNIQUE("repo_url", "workspace_id");
+
 -- Create a default workspace and assign all existing data to it
 DO $$
 DECLARE

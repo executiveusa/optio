@@ -53,9 +53,17 @@ export async function getRepo(id: string): Promise<RepoRecord | null> {
   return (repo as RepoRecord) ?? null;
 }
 
-export async function getRepoByUrl(repoUrl: string): Promise<RepoRecord | null> {
+export async function getRepoByUrl(
+  repoUrl: string,
+  workspaceId?: string | null,
+): Promise<RepoRecord | null> {
   const normalized = normalizeRepoUrl(repoUrl);
-  const [repo] = await db.select().from(repos).where(eq(repos.repoUrl, normalized));
+  const conditions = [eq(repos.repoUrl, normalized)];
+  if (workspaceId) conditions.push(eq(repos.workspaceId, workspaceId));
+  const [repo] = await db
+    .select()
+    .from(repos)
+    .where(and(...conditions));
   return (repo as RepoRecord) ?? null;
 }
 
@@ -76,7 +84,7 @@ export async function createRepo(data: {
       workspaceId: data.workspaceId ?? undefined,
     })
     .onConflictDoUpdate({
-      target: repos.repoUrl,
+      target: [repos.repoUrl, repos.workspaceId],
       set: {
         fullName: data.fullName,
         defaultBranch: data.defaultBranch ?? "main",
