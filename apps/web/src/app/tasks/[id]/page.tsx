@@ -30,6 +30,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const [actionLoading, setActionLoading] = useState(false);
   const [resumePrompt, setResumePrompt] = useState("");
   const [showTimeline, setShowTimeline] = useState(true);
+  const [dependencies, setDependencies] = useState<any[]>([]);
+  const [dependents, setDependents] = useState<any[]>([]);
   const [subtasks, setSubtasks] = useState<any[]>([]);
   const [showCreateSubtask, setShowCreateSubtask] = useState(false);
   const [newSubtask, setNewSubtask] = useState({
@@ -53,6 +55,14 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       api
         .getSubtasks(id)
         .then((res) => setSubtasks(res.subtasks))
+        .catch(() => {});
+      api
+        .getTaskDependencies(id)
+        .then((res) => setDependencies(res.dependencies))
+        .catch(() => {});
+      api
+        .getTaskDependents(id)
+        .then((res) => setDependents(res.dependents))
         .catch(() => {});
     }
   }, [id, task?.state]);
@@ -374,6 +384,55 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <div className="mt-2 p-2 rounded-md bg-warning/5 border border-warning/20 text-xs">
                 <div className="font-medium text-warning mb-1">Review feedback:</div>
                 <pre className="text-text-muted whitespace-pre-wrap">{task.prReviewComments}</pre>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Dependencies */}
+      {(dependencies.length > 0 || dependents.length > 0) && (
+        <div className="shrink-0 border-b border-border bg-bg px-4 py-2.5">
+          <div className="max-w-5xl mx-auto">
+            {dependencies.length > 0 && (
+              <div className="mb-2">
+                <h3 className="text-xs font-medium text-text-muted mb-1.5">
+                  Depends on (
+                  {dependencies.filter((d: any) => d.depTaskState === "completed").length}/
+                  {dependencies.length} complete)
+                </h3>
+                <div className="space-y-1">
+                  {dependencies.map((dep: any) => (
+                    <Link
+                      key={dep.id}
+                      href={`/tasks/${dep.dependsOnTaskId}`}
+                      className="flex items-center gap-2 p-2 rounded-md border border-border bg-bg-card text-xs transition-colors hover:bg-bg-hover"
+                    >
+                      <span className="truncate flex-1">{dep.depTaskTitle}</span>
+                      <StateBadge state={dep.depTaskState} />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            {dependents.length > 0 && (
+              <div>
+                <h3 className="text-xs font-medium text-text-muted mb-1.5">
+                  Blocks ({dependents.length} task
+                  {dependents.length !== 1 ? "s" : ""})
+                </h3>
+                <div className="space-y-1">
+                  {dependents.map((dep: any) => (
+                    <Link
+                      key={dep.id}
+                      href={`/tasks/${dep.taskId}`}
+                      className="flex items-center gap-2 p-2 rounded-md border border-border bg-bg-card text-xs transition-colors hover:bg-bg-hover"
+                    >
+                      <span className="truncate flex-1">{dep.taskTitle}</span>
+                      <StateBadge state={dep.taskState} />
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
           </div>

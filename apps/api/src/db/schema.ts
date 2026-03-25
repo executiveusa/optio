@@ -210,3 +210,51 @@ export const promptTemplates = pgTable("prompt_templates", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ── Task Dependencies ─────────────────────────────────────────────
+export const taskDependencies = pgTable(
+  "task_dependencies",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    taskId: uuid("task_id")
+      .notNull()
+      .references(() => tasks.id),
+    dependsOnTaskId: uuid("depends_on_task_id")
+      .notNull()
+      .references(() => tasks.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [unique("task_dep_unique").on(table.taskId, table.dependsOnTaskId)],
+);
+
+// ── Workflows ─────────────────────────────────────────────────────
+export const workflows = pgTable("workflows", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  description: text("description"),
+  repoUrl: text("repo_url"), // null = any repo, set = repo-specific
+  createdBy: uuid("created_by"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const workflowSteps = pgTable("workflow_steps", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workflowId: uuid("workflow_id")
+    .notNull()
+    .references(() => workflows.id, { onDelete: "cascade" }),
+  stepOrder: integer("step_order").notNull().default(0),
+  title: text("title").notNull(),
+  prompt: text("prompt").notNull(),
+  agentType: text("agent_type").notNull().default("claude-code"),
+  // JSON array of step orders this step depends on (within the workflow)
+  dependsOnSteps: jsonb("depends_on_steps").$type<number[]>().default([]),
+  // Conditions: JSON object with optional condition fields
+  conditions: jsonb("conditions").$type<{
+    ifPrOpened?: boolean;
+    ifCiPasses?: boolean;
+    ifCostBelow?: number;
+    requiresApproval?: boolean;
+  }>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

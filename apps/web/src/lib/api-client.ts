@@ -42,8 +42,9 @@ export const api = {
     metadata?: Record<string, unknown>;
     maxRetries?: number;
     priority?: number;
+    dependsOn?: string[];
   }) =>
-    request<{ task: any }>("/api/tasks", {
+    request<{ task: any; pendingDependencies?: boolean }>("/api/tasks", {
       method: "POST",
       body: JSON.stringify(data),
     }),
@@ -346,6 +347,76 @@ export const api = {
     agentType?: string;
   }) =>
     request<{ task: any }>("/api/issues/assign", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Dependencies
+  getTaskDependencies: (taskId: string) =>
+    request<{ dependencies: any[] }>(`/api/tasks/${taskId}/dependencies`),
+
+  getTaskDependents: (taskId: string) =>
+    request<{ dependents: any[] }>(`/api/tasks/${taskId}/dependents`),
+
+  getDependencyStatus: (taskId: string) =>
+    request<{
+      allMet: boolean;
+      total: number;
+      completed: number;
+      failed: number;
+      pending: number;
+    }>(`/api/tasks/${taskId}/dependencies/status`),
+
+  addDependency: (taskId: string, dependsOnTaskId: string) =>
+    request<{ dependency: any }>(`/api/tasks/${taskId}/dependencies`, {
+      method: "POST",
+      body: JSON.stringify({ dependsOnTaskId }),
+    }),
+
+  removeDependency: (taskId: string, depTaskId: string) =>
+    request<void>(`/api/tasks/${taskId}/dependencies/${depTaskId}`, { method: "DELETE" }),
+
+  // Workflows
+  listWorkflows: () => request<{ workflows: any[] }>("/api/workflows"),
+
+  getWorkflow: (id: string) => request<{ workflow: any }>(`/api/workflows/${id}`),
+
+  createWorkflow: (data: {
+    name: string;
+    description?: string;
+    repoUrl?: string;
+    steps: Array<{
+      stepOrder: number;
+      title: string;
+      prompt: string;
+      agentType?: string;
+      dependsOnSteps?: number[];
+      conditions?: {
+        ifPrOpened?: boolean;
+        ifCiPasses?: boolean;
+        ifCostBelow?: number;
+        requiresApproval?: boolean;
+      };
+    }>;
+  }) =>
+    request<{ workflow: any }>("/api/workflows", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateWorkflow: (id: string, data: Record<string, unknown>) =>
+    request<{ workflow: any }>(`/api/workflows/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  deleteWorkflow: (id: string) => request<void>(`/api/workflows/${id}`, { method: "DELETE" }),
+
+  executeWorkflow: (id: string, data: { repoUrl: string; repoBranch?: string }) =>
+    request<{
+      workflowId: string;
+      tasks: Array<{ taskId: string; stepOrder: number; title: string }>;
+    }>(`/api/workflows/${id}/execute`, {
       method: "POST",
       body: JSON.stringify(data),
     }),

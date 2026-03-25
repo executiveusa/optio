@@ -18,6 +18,7 @@ const createTaskSchema = z.object({
   metadata: z.record(z.unknown()).optional(),
   maxRetries: z.number().int().min(0).max(10).optional(),
   priority: z.number().int().min(1).max(1000).optional(),
+  dependsOn: z.array(z.string().uuid()).optional(),
 });
 
 export async function taskRoutes(app: FastifyInstance) {
@@ -43,20 +44,39 @@ export async function taskRoutes(app: FastifyInstance) {
     const input = createTaskSchema.parse(req.body);
     const task = await taskService.createTask(input);
 
-    // Enqueue for processing
-    await taskService.transitionTask(task.id, TaskState.QUEUED, "task_submitted");
-    await taskQueue.add(
-      "process-task",
-      { taskId: task.id },
-      {
-        jobId: task.id,
-        priority: task.priority ?? 100,
-        attempts: task.maxRetries + 1,
-        backoff: { type: "exponential", delay: 5000 },
-      },
-    );
+    // Add dependencies if specified
+    const hasDeps = input.dependsOn && input.dependsOn.length > 0;
+    if (hasDeps) {
+      try {
+        const { addDependencies } = await import("../services/dependency-service.js");
+        await addDependencies(task.id, input.dependsOn!);
+      } catch (err) {
+        // Clean up the task if dependency validation fails
+        await db.delete(tasks).where(eq(tasks.id, task.id));
+        return reply.status(400).send({
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
 
-    reply.status(201).send({ task });
+    if (hasDeps) {
+      // Task stays in "pending" until dependencies complete
+      reply.status(201).send({ task, pendingDependencies: true });
+    } else {
+      // No dependencies — enqueue immediately
+      await taskService.transitionTask(task.id, TaskState.QUEUED, "task_submitted");
+      await taskQueue.add(
+        "process-task",
+        { taskId: task.id },
+        {
+          jobId: task.id,
+          priority: task.priority ?? 100,
+          attempts: task.maxRetries + 1,
+          backoff: { type: "exponential", delay: 5000 },
+        },
+      );
+      reply.status(201).send({ task });
+    }
   });
 
   // Cancel task

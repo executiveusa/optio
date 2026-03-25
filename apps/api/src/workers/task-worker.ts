@@ -476,6 +476,24 @@ export function startTaskWorker() {
             log.warn({ err }, "Failed to check parent subtask status"),
           );
         }
+
+        // Handle dependency callbacks (auto-start dependents or cascade failure)
+        if (completedTask) {
+          const { onTaskCompleted, onTaskFailed } =
+            await import("../services/dependency-service.js");
+          if (completedTask.state === TaskState.COMPLETED) {
+            await onTaskCompleted(taskId).catch((err) =>
+              log.warn({ err }, "Failed to process dependency completions"),
+            );
+          } else if (
+            completedTask.state === TaskState.FAILED ||
+            completedTask.state === TaskState.CANCELLED
+          ) {
+            await onTaskFailed(taskId).catch((err) =>
+              log.warn({ err }, "Failed to process dependency cascade failure"),
+            );
+          }
+        }
       } catch (err) {
         // State race errors mean another worker claimed the task — not a real failure
         if (err instanceof taskService.StateRaceError) {

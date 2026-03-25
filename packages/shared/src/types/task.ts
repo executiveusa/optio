@@ -54,4 +54,5 @@ export interface CreateTaskInput {
   metadata?: Record<string, unknown>;
   maxRetries?: number;
   priority?: number;
+  dependsOn?: string[]; // task IDs this task depends on
 }
