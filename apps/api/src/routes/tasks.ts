@@ -63,7 +63,7 @@ export async function taskRoutes(app: FastifyInstance) {
     const task = await taskService.getTask(id);
     if (!task) return reply.status(404).send({ error: "Task not found" });
     const wsId = req.user?.workspaceId;
-    if (wsId && task.workspaceId && task.workspaceId !== wsId) {
+    if (wsId && task.workspaceId !== wsId) {
       return reply.status(404).send({ error: "Task not found" });
     }
     reply.send({ task });
@@ -105,7 +105,7 @@ export async function taskRoutes(app: FastifyInstance) {
     const existing = await taskService.getTask(id);
     if (!existing) return reply.status(404).send({ error: "Task not found" });
     const wsId = req.user?.workspaceId;
-    if (wsId && existing.workspaceId && existing.workspaceId !== wsId) {
+    if (wsId && existing.workspaceId !== wsId) {
       return reply.status(404).send({ error: "Task not found" });
     }
     const task = await taskService.transitionTask(
@@ -124,7 +124,7 @@ export async function taskRoutes(app: FastifyInstance) {
     const existing = await taskService.getTask(id);
     if (!existing) return reply.status(404).send({ error: "Task not found" });
     const wsId = req.user?.workspaceId;
-    if (wsId && existing.workspaceId && existing.workspaceId !== wsId) {
+    if (wsId && existing.workspaceId !== wsId) {
       return reply.status(404).send({ error: "Task not found" });
     }
     const task = await taskService.transitionTask(
@@ -151,7 +151,7 @@ export async function taskRoutes(app: FastifyInstance) {
     const existing = await taskService.getTask(id);
     if (!existing) return reply.status(404).send({ error: "Task not found" });
     const wsId = req.user?.workspaceId;
-    if (wsId && existing.workspaceId && existing.workspaceId !== wsId) {
+    if (wsId && existing.workspaceId !== wsId) {
       return reply.status(404).send({ error: "Task not found" });
     }
 
@@ -181,7 +181,7 @@ export async function taskRoutes(app: FastifyInstance) {
     const task = await taskService.getTask(id);
     if (!task) return reply.status(404).send({ error: "Task not found" });
     const wsId = req.user?.workspaceId;
-    if (wsId && task.workspaceId && task.workspaceId !== wsId) {
+    if (wsId && task.workspaceId !== wsId) {
       return reply.status(404).send({ error: "Task not found" });
     }
     const query = req.query as {
@@ -310,7 +310,7 @@ export async function taskRoutes(app: FastifyInstance) {
     const task = await taskService.getTask(id);
     if (!task) return reply.status(404).send({ error: "Task not found" });
     const wsId = req.user?.workspaceId;
-    if (wsId && task.workspaceId && task.workspaceId !== wsId) {
+    if (wsId && task.workspaceId !== wsId) {
       return reply.status(404).send({ error: "Task not found" });
     }
     const events = await taskService.getTaskEvents(id);
@@ -323,7 +323,7 @@ export async function taskRoutes(app: FastifyInstance) {
     const existing = await taskService.getTask(id);
     if (!existing) return reply.status(404).send({ error: "Task not found" });
     const wsId = req.user?.workspaceId;
-    if (wsId && existing.workspaceId && existing.workspaceId !== wsId) {
+    if (wsId && existing.workspaceId !== wsId) {
       return reply.status(404).send({ error: "Task not found" });
     }
     try {

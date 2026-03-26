@@ -121,6 +121,12 @@ export async function addMember(
   userId: string,
   role: WorkspaceRole = "member",
 ): Promise<void> {
+  // Validate user exists
+  const [user] = await db.select({ id: users.id }).from(users).where(eq(users.id, userId));
+  if (!user) {
+    throw new Error("User not found");
+  }
+
   await db
     .insert(workspaceMembers)
     .values({ workspaceId, userId, role })

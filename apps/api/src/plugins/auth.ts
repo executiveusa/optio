@@ -64,14 +64,14 @@ async function authPlugin(app: FastifyInstance) {
         const defaultWsId = await ensureUserHasWorkspace(user.id);
         const defaultRole = await getUserRole(defaultWsId, user.id);
         user.workspaceId = defaultWsId;
-        user.workspaceRole = defaultRole;
+        user.workspaceRole = defaultRole ?? "member";
       }
     } else {
       // No workspace set — ensure user has one
       const defaultWsId = await ensureUserHasWorkspace(user.id);
       const defaultRole = await getUserRole(defaultWsId, user.id);
       user.workspaceId = defaultWsId;
-      user.workspaceRole = defaultRole;
+      user.workspaceRole = defaultRole ?? "member";
     }
 
     req.user = user;

@@ -53,7 +53,7 @@ export async function repoRoutes(app: FastifyInstance) {
     const repo = await repoService.getRepo(id);
     if (!repo) return reply.status(404).send({ error: "Repo not found" });
     const wsId = req.user?.workspaceId;
-    if (wsId && repo.workspaceId && repo.workspaceId !== wsId) {
+    if (wsId && repo.workspaceId !== wsId) {
       return reply.status(404).send({ error: "Repo not found" });
     }
     reply.send({ repo });
@@ -90,7 +90,7 @@ export async function repoRoutes(app: FastifyInstance) {
     const existing = await repoService.getRepo(id);
     if (!existing) return reply.status(404).send({ error: "Repo not found" });
     const wsId = req.user?.workspaceId;
-    if (wsId && existing.workspaceId && existing.workspaceId !== wsId) {
+    if (wsId && existing.workspaceId !== wsId) {
       return reply.status(404).send({ error: "Repo not found" });
     }
     const body = updateRepoSchema.parse(req.body);
@@ -104,7 +104,7 @@ export async function repoRoutes(app: FastifyInstance) {
     const existing = await repoService.getRepo(id);
     if (!existing) return reply.status(404).send({ error: "Repo not found" });
     const wsId = req.user?.workspaceId;
-    if (wsId && existing.workspaceId && existing.workspaceId !== wsId) {
+    if (wsId && existing.workspaceId !== wsId) {
       return reply.status(404).send({ error: "Repo not found" });
     }
     await repoService.deleteRepo(id);
@@ -117,7 +117,7 @@ export async function repoRoutes(app: FastifyInstance) {
     const repo = await repoService.getRepo(id);
     if (!repo) return reply.status(404).send({ error: "Repo not found" });
     const wsId = req.user?.workspaceId;
-    if (wsId && repo.workspaceId && repo.workspaceId !== wsId) {
+    if (wsId && repo.workspaceId !== wsId) {
       return reply.status(404).send({ error: "Repo not found" });
     }
 

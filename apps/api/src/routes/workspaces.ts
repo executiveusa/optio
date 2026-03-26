@@ -116,7 +116,15 @@ export async function workspaceRoutes(app: FastifyInstance) {
     if (callerRole !== "admin") return reply.status(403).send({ error: "Admin role required" });
 
     const body = addMemberSchema.parse(req.body);
-    await workspaceService.addMember(id, body.userId, body.role);
+    try {
+      await workspaceService.addMember(id, body.userId, body.role);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg === "User not found") {
+        return reply.status(404).send({ error: "User not found" });
+      }
+      throw err;
+    }
     reply.status(201).send({ ok: true });
   });
 

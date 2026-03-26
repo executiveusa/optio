@@ -317,7 +317,7 @@ export async function clusterRoutes(app: FastifyInstance) {
     const [pod] = await db.select().from(repoPods).where(eq(repoPods.id, id));
     if (!pod) return reply.status(404).send({ error: "Pod not found" });
     const wsId = req.user?.workspaceId;
-    if (wsId && pod.workspaceId && pod.workspaceId !== wsId) {
+    if (wsId && pod.workspaceId !== wsId) {
       return reply.status(404).send({ error: "Pod not found" });
     }
 
@@ -378,7 +378,7 @@ export async function clusterRoutes(app: FastifyInstance) {
     const [pod] = await db.select().from(repoPods).where(eq(repoPods.id, id));
     if (!pod) return reply.status(404).send({ error: "Pod not found" });
     const wsId = req.user?.workspaceId;
-    if (wsId && pod.workspaceId && pod.workspaceId !== wsId) {
+    if (wsId && pod.workspaceId !== wsId) {
       return reply.status(404).send({ error: "Pod not found" });
     }
 
