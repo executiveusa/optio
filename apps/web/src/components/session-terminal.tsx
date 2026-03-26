@@ -1,16 +1,32 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Terminal as XTerm } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
+import { Bot } from "lucide-react";
 import "@xterm/xterm/css/xterm.css";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:4000";
 
-export function SessionTerminal({ sessionId }: { sessionId: string }) {
+interface SessionTerminalProps {
+  sessionId: string;
+  onSendToAgent?: (text: string) => void;
+}
+
+export function SessionTerminal({ sessionId, onSendToAgent }: SessionTerminalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<XTerm | null>(null);
+  const [hasSelection, setHasSelection] = useState(false);
+
+  const handleSendSelection = useCallback(() => {
+    const term = termRef.current;
+    if (!term || !onSendToAgent) return;
+    const selection = term.getSelection();
+    if (selection) {
+      onSendToAgent(`Fix this:\n\`\`\`\n${selection}\n\`\`\``);
+    }
+  }, [onSendToAgent]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -41,6 +57,11 @@ export function SessionTerminal({ sessionId }: { sessionId: string }) {
     term.open(containerRef.current);
     fitAddon.fit();
     termRef.current = term;
+
+    // Track selection state
+    term.onSelectionChange(() => {
+      setHasSelection(!!term.getSelection());
+    });
 
     // WebSocket connection to session terminal
     const ws = new WebSocket(`${WS_URL}/ws/sessions/${sessionId}/terminal`);
@@ -100,8 +121,19 @@ export function SessionTerminal({ sessionId }: { sessionId: string }) {
   }, [sessionId]);
 
   return (
-    <div className="h-full bg-[#09090b]">
+    <div className="h-full bg-[#09090b] relative">
       <div ref={containerRef} className="h-full" />
+      {/* Send to agent floating button */}
+      {hasSelection && onSendToAgent && (
+        <button
+          onClick={handleSendSelection}
+          className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-medium shadow-lg hover:bg-primary/90 transition-colors z-10"
+          title="Send selection to agent chat"
+        >
+          <Bot className="w-3 h-3" />
+          Send to Agent
+        </button>
+      )}
     </div>
   );
 }

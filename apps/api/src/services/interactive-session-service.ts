@@ -182,6 +182,38 @@ export async function updateSessionPr(
   return updated;
 }
 
+export async function updateSessionCost(id: string, costUsd: string) {
+  const [updated] = await db
+    .update(interactiveSessions)
+    .set({ costUsd })
+    .where(eq(interactiveSessions.id, id))
+    .returning();
+
+  await publishSessionEvent(id, {
+    type: "session:cost_updated",
+    sessionId: id,
+    costUsd,
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
+}
+
+export async function getSessionWithRepoConfig(id: string) {
+  const session = await getSession(id);
+  if (!session) return null;
+
+  const [repoConfig] = await db.select().from(repos).where(eq(repos.repoUrl, session.repoUrl));
+
+  return {
+    ...session,
+    claudeModel: repoConfig?.claudeModel ?? null,
+    claudeContextWindow: repoConfig?.claudeContextWindow ?? null,
+    claudeThinking: repoConfig?.claudeThinking ?? null,
+    claudeEffort: repoConfig?.claudeEffort ?? null,
+  };
+}
+
 export async function getActiveSessionCount(repoUrl?: string) {
   const conditions = [eq(interactiveSessions.state, "active")];
   if (repoUrl) conditions.push(eq(interactiveSessions.repoUrl, repoUrl));

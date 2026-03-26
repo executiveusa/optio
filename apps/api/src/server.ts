@@ -27,6 +27,7 @@ import { workspaceRoutes } from "./routes/workspaces.js";
 import { logStreamWs } from "./ws/log-stream.js";
 import { eventsWs } from "./ws/events.js";
 import { sessionTerminalWs } from "./ws/session-terminal.js";
+import { sessionChatWs } from "./ws/session-chat.js";
 import authPlugin from "./plugins/auth.js";
 
 const loggerConfig =
@@ -87,6 +88,7 @@ export async function buildServer() {
   await app.register(logStreamWs);
   await app.register(eventsWs);
   await app.register(sessionTerminalWs);
+  await app.register(sessionChatWs);
 
   // Global error handler for Zod validation
   app.setErrorHandler((error: FastifyError | Error, _req, reply) => {

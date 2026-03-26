@@ -31,3 +31,48 @@ export interface SessionPr {
 export interface CreateSessionInput {
   repoUrl: string;
 }
+
+// ── Chat types ──────────────────────────────────────────────────────────────
+
+export type ChatAgentStatus = "idle" | "thinking" | "responding";
+
+/** Client → Server messages on WS /ws/sessions/:id/chat */
+export type ChatClientMessage = { type: "message"; content: string } | { type: "interrupt" };
+
+/** Server → Client messages on WS /ws/sessions/:id/chat */
+export type ChatServerMessage =
+  | ChatEventMessage
+  | ChatStatusMessage
+  | ChatCostMessage
+  | ChatErrorMessage
+  | ChatHistoryMessage;
+
+export interface ChatEventMessage {
+  type: "chat:event";
+  role: "user" | "assistant";
+  eventType: "text" | "tool_use" | "tool_result" | "thinking" | "system" | "error" | "info";
+  content: string;
+  metadata?: Record<string, unknown>;
+  timestamp: string;
+}
+
+export interface ChatStatusMessage {
+  type: "chat:status";
+  status: ChatAgentStatus;
+}
+
+export interface ChatCostMessage {
+  type: "chat:cost";
+  totalCostUsd: string;
+  messageCostUsd?: string;
+}
+
+export interface ChatErrorMessage {
+  type: "chat:error";
+  message: string;
+}
+
+export interface ChatHistoryMessage {
+  type: "chat:history";
+  messages: ChatEventMessage[];
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect, useRef } from "react";
+import { use, useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api-client";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -17,8 +17,12 @@ import {
   XCircle,
   Clock,
   AlertTriangle,
+  DollarSign,
+  Bot,
 } from "lucide-react";
 import { SessionTerminal } from "@/components/session-terminal";
+import { SessionChat } from "@/components/session-chat";
+import { SplitPane } from "@/components/split-pane";
 
 export default function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -27,6 +31,8 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
   const [loading, setLoading] = useState(true);
   const [ending, setEnding] = useState(false);
   const [showEndWarning, setShowEndWarning] = useState(false);
+  const [liveCost, setLiveCost] = useState<string | null>(null);
+  const [sendToAgent, setSendToAgent] = useState<string | null>(null);
 
   const fetchSession = async () => {
     try {
@@ -69,6 +75,14 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
     setEnding(false);
   };
 
+  const handleCostUpdate = useCallback((costUsd: string) => {
+    setLiveCost(costUsd);
+  }, []);
+
+  const handleSendToAgentHandled = useCallback(() => {
+    setSendToAgent(null);
+  }, []);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full text-text-muted">
@@ -88,6 +102,8 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
 
   const isActive = session.state === "active";
   const repoName = session.repoUrl?.replace("https://github.com/", "") ?? "Unknown";
+  const displayCost = liveCost ?? session.costUsd;
+  const modelLabel = session.claudeModel ?? "sonnet";
 
   return (
     <div className="h-full flex flex-col">
@@ -133,9 +149,18 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
           </div>
 
           <div className="flex items-center gap-2">
-            {session.costUsd && (
-              <span className="text-xs text-text-muted px-2 py-1 bg-bg-card rounded-md border border-border">
-                ${parseFloat(session.costUsd).toFixed(2)}
+            {/* Model badge */}
+            {isActive && (
+              <span className="text-xs text-text-muted px-2 py-1 bg-bg-card rounded-md border border-border flex items-center gap-1">
+                <Bot className="w-3 h-3" />
+                {modelLabel}
+              </span>
+            )}
+            {/* Live cost counter */}
+            {displayCost && (
+              <span className="text-xs text-text-muted px-2 py-1 bg-bg-card rounded-md border border-border flex items-center gap-1 tabular-nums">
+                <DollarSign className="w-3 h-3" />
+                {parseFloat(displayCost).toFixed(4)}
               </span>
             )}
             {isActive && (
@@ -187,11 +212,24 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
 
       {/* Main content */}
       <div className="flex-1 flex min-h-0">
-        {/* Terminal area */}
-        <div className="flex-1 min-w-0">
-          {isActive ? (
-            <SessionTerminal sessionId={id} />
-          ) : (
+        {isActive ? (
+          <div className="flex-1 min-w-0">
+            <SplitPane
+              leftLabel="Agent Chat"
+              rightLabel="Terminal"
+              left={
+                <SessionChat
+                  sessionId={id}
+                  onCostUpdate={handleCostUpdate}
+                  sendToAgent={sendToAgent}
+                  onSendToAgentHandled={handleSendToAgentHandled}
+                />
+              }
+              right={<SessionTerminal sessionId={id} onSendToAgent={setSendToAgent} />}
+            />
+          </div>
+        ) : (
+          <div className="flex-1 min-w-0">
             <div className="h-full flex items-center justify-center text-text-muted bg-[#09090b]">
               <div className="text-center">
                 <Terminal className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -203,8 +241,8 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
                 )}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* PR sidebar */}
         {prs.length > 0 && (

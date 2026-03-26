@@ -25,10 +25,10 @@ export async function sessionRoutes(app: FastifyInstance) {
     reply.send({ sessions, activeCount });
   });
 
-  // Get session
+  // Get session (includes repo model config)
   app.get("/api/sessions/:id", async (req, reply) => {
     const { id } = req.params as { id: string };
-    const session = await sessionService.getSession(id);
+    const session = await sessionService.getSessionWithRepoConfig(id);
     if (!session) return reply.status(404).send({ error: "Session not found" });
     reply.send({ session });
   });

@@ -102,3 +102,7 @@ export function createTerminalClient(taskId: string, tokenProvider?: TokenProvid
 export function createSessionTerminalClient(sessionId: string): WsClient {
   return new WsClient(`${WS_URL}/ws/sessions/${sessionId}/terminal`);
 }
+
+export function createSessionChatClient(sessionId: string): WsClient {
+  return new WsClient(`${WS_URL}/ws/sessions/${sessionId}/chat`);
+}

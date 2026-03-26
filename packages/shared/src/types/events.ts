@@ -8,6 +8,7 @@ export type WsEvent =
   | AuthFailedEvent
   | SessionCreatedEvent
   | SessionEndedEvent
+  | SessionCostUpdatedEvent
   | TaskCommentEvent;
 
 export interface TaskStateChangedEvent {
@@ -50,6 +51,13 @@ export interface SessionCreatedEvent {
 export interface SessionEndedEvent {
   type: "session:ended";
   sessionId: string;
+  timestamp: string;
+}
+
+export interface SessionCostUpdatedEvent {
+  type: "session:cost_updated";
+  sessionId: string;
+  costUsd: string;
   timestamp: string;
 }
 
