@@ -221,6 +221,9 @@ describe("POST /api/tasks", () => {
       },
     });
 
+    if (res.statusCode !== 201) {
+      console.error("UNEXPECTED STATUS:", res.statusCode, "BODY:", res.body);
+    }
     expect(res.statusCode).toBe(201);
     expect(mockCreateTask).toHaveBeenCalledWith(
       expect.objectContaining({

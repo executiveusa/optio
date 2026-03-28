@@ -94,6 +94,9 @@ describe("GET /api/analytics/costs", () => {
       url: "/api/analytics/costs",
     });
 
+    if (res.statusCode !== 200) {
+      console.error("UNEXPECTED STATUS:", res.statusCode, "BODY:", res.body);
+    }
     expect(res.statusCode).toBe(200);
     const body = res.json();
     expect(body.summary).toBeDefined();

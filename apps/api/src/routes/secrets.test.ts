@@ -78,6 +78,9 @@ describe("POST /api/secrets", () => {
       payload: { name: "MY_SECRET", value: "super-secret-value" },
     });
 
+    if (res.statusCode !== 201) {
+      console.error("UNEXPECTED STATUS:", res.statusCode, "BODY:", res.body);
+    }
     expect(res.statusCode).toBe(201);
     expect(res.json()).toEqual({ name: "MY_SECRET", scope: "global" });
     expect(mockStoreSecret).toHaveBeenCalledWith(
