@@ -47,6 +47,9 @@ RUN curl -fsSL https://opencode.ai/install | bash \
   && mv /root/.opencode/bin/opencode /usr/local/bin/ \
   && rm -rf /root/.opencode
 
+# Google Gemini CLI
+RUN npm install -g @google/gemini-cli
+
 # Python 3 (minimal — needed for setup file injection)
 RUN apt-get update && apt-get install -y python3 \
     && rm -rf /var/lib/apt/lists/*
