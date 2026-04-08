@@ -9,21 +9,21 @@ decision-making around cryptographic changes.
 
 ## 1. Primitive inventory
 
-| Purpose | Algorithm | Key / output size | Implementation | PQ-safe? | Migration trigger |
-|---|---|---|---|---|---|
-| Secrets at rest | AES-256-GCM (NIST SP 800-38D) | 256-bit key, 96-bit IV, 128-bit auth tag | `node:crypto` via `secret-service.ts` | Yes (Grover's reduces to 128-bit effective security) | NIST publishes AES successor |
-| Session token storage | SHA-256 of random 32-byte token | 256-bit hash | `session-service.ts` | Yes (256-bit pre-image resistance) | CNSA 2.0 compliance requirement |
-| Internal API auth (pod ↔ API) | HMAC-SHA256 with replay protection | 256-bit secret | `hmac-auth-service.ts` | Yes | None required |
-| Webhook signing (outbound) | HMAC-SHA256 | Per-webhook secret | `webhook-service.ts` via `crypto/signer.ts` | Yes | Optional ML-DSA-65 mode when customers demand it |
-| Webhook verification (inbound GitHub) | HMAC-SHA256 + `timingSafeEqual` | GitHub-configured secret | `tickets.ts` via `crypto/signer.ts` | Yes | Follows GitHub's signing algorithm |
-| GitHub App JWT | RS256 (RSA with SHA-256) | RSA private key (PEM) | `github-app-service.ts` via `crypto/signer.ts` | **No** (low HNDL risk; JWT valid 10 min) | GitHub adds PQ-safe App auth |
-| Credential secret derivation | SHA-256 of `"{key}:credential-secret"` | 256-bit derived key | `credential-secret-service.ts` | Yes | None required |
-| Envoy sidecar CA | Ed25519 self-signed X.509, 30-day validity | 256-bit key | `envoy-sidecar.ts` via `openssl` CLI | **No** (ephemeral, intra-pod only) | Set `OPTIO_ENVOY_CA_ALG=mldsa44` when OpenSSL 3.5+ is available |
-| Postgres TLS (in-cluster) | Helm-generated self-signed CA, 10-year validity | RSA 2048 (Helm `genCA` default) | `helm/optio/templates/postgres-tls.yaml` | **No** (cluster-internal) | Helm adds PQ CA generation |
-| Redis TLS (in-cluster) | Helm-generated self-signed CA, 10-year validity | RSA 2048 (Helm `genCA` default) | `helm/optio/templates/redis-tls.yaml` | **No** (cluster-internal) | Helm adds PQ CA generation |
-| Outbound TLS (fetch to APIs) | TLS 1.3 via OpenSSL (X25519MLKEM768 hybrid when upstream supports) | Session keys | Node.js bundled OpenSSL | Yes when upstream supports hybrid | Upstream providers ship hybrid TLS |
-| Kubernetes API TLS | Whatever the cluster negotiates | Session keys | `@kubernetes/client-node` | Yes on K8s >= 1.33 (Go 1.24 default) | Cluster upgrade |
-| WebSocket upgrade tokens | SHA-256 of random 32-byte token | 256-bit hash, 30-second TTL | `session-service.ts` | Yes | Same as session tokens |
+| Purpose                               | Algorithm                                                          | Key / output size                        | Implementation                                 | PQ-safe?                                             | Migration trigger                                               |
+| ------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------- | ---------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------- |
+| Secrets at rest                       | AES-256-GCM (NIST SP 800-38D)                                      | 256-bit key, 96-bit IV, 128-bit auth tag | `node:crypto` via `secret-service.ts`          | Yes (Grover's reduces to 128-bit effective security) | NIST publishes AES successor                                    |
+| Session token storage                 | SHA-256 of random 32-byte token                                    | 256-bit hash                             | `session-service.ts`                           | Yes (256-bit pre-image resistance)                   | CNSA 2.0 compliance requirement                                 |
+| Internal API auth (pod ↔ API)         | HMAC-SHA256 with replay protection                                 | 256-bit secret                           | `hmac-auth-service.ts`                         | Yes                                                  | None required                                                   |
+| Webhook signing (outbound)            | HMAC-SHA256                                                        | Per-webhook secret                       | `webhook-service.ts` via `crypto/signer.ts`    | Yes                                                  | Optional ML-DSA-65 mode when customers demand it                |
+| Webhook verification (inbound GitHub) | HMAC-SHA256 + `timingSafeEqual`                                    | GitHub-configured secret                 | `tickets.ts` via `crypto/signer.ts`            | Yes                                                  | Follows GitHub's signing algorithm                              |
+| GitHub App JWT                        | RS256 (RSA with SHA-256)                                           | RSA private key (PEM)                    | `github-app-service.ts` via `crypto/signer.ts` | **No** (low HNDL risk; JWT valid 10 min)             | GitHub adds PQ-safe App auth                                    |
+| Credential secret derivation          | SHA-256 of `"{key}:credential-secret"`                             | 256-bit derived key                      | `credential-secret-service.ts`                 | Yes                                                  | None required                                                   |
+| Envoy sidecar CA                      | Ed25519 self-signed X.509, 30-day validity                         | 256-bit key                              | `envoy-sidecar.ts` via `openssl` CLI           | **No** (ephemeral, intra-pod only)                   | Set `OPTIO_ENVOY_CA_ALG=mldsa44` when OpenSSL 3.5+ is available |
+| Postgres TLS (in-cluster)             | Helm-generated self-signed CA, 10-year validity                    | RSA 2048 (Helm `genCA` default)          | `helm/optio/templates/postgres-tls.yaml`       | **No** (cluster-internal)                            | Helm adds PQ CA generation                                      |
+| Redis TLS (in-cluster)                | Helm-generated self-signed CA, 10-year validity                    | RSA 2048 (Helm `genCA` default)          | `helm/optio/templates/redis-tls.yaml`          | **No** (cluster-internal)                            | Helm adds PQ CA generation                                      |
+| Outbound TLS (fetch to APIs)          | TLS 1.3 via OpenSSL (X25519MLKEM768 hybrid when upstream supports) | Session keys                             | Node.js bundled OpenSSL                        | Yes when upstream supports hybrid                    | Upstream providers ship hybrid TLS                              |
+| Kubernetes API TLS                    | Whatever the cluster negotiates                                    | Session keys                             | `@kubernetes/client-node`                      | Yes on K8s >= 1.33 (Go 1.24 default)                 | Cluster upgrade                                                 |
+| WebSocket upgrade tokens              | SHA-256 of random 32-byte token                                    | 256-bit hash, 30-second TTL              | `session-service.ts`                           | Yes                                                  | Same as session tokens                                          |
 
 ### Implementation notes
 
@@ -45,6 +45,7 @@ The Mosca inequality determines when to begin migration:
 > If **x + y > z**, you must migrate now.
 
 Where:
+
 - **x** = security shelf life (how long the data must remain confidential)
 - **y** = migration time (how long it takes to deploy new crypto)
 - **z** = time until a cryptographically relevant quantum computer (CRQC) exists
@@ -52,15 +53,15 @@ Where:
 Current industry estimates place **z** at 10–15 years (2035–2040). Optio's
 migration time (**y**) is estimated at 1–2 years for each primitive.
 
-| Secret type | Example | Shelf life (x) | x + y | Migrate now? | Notes |
-|---|---|---|---|---|---|
-| API keys (`ANTHROPIC_API_KEY`) | Anthropic API key | Short (rotatable, < 1 year) | 2–3 years | No | Rotate regularly; HNDL risk is low |
-| OAuth tokens (`CLAUDE_CODE_OAUTH_TOKEN`) | Claude subscription token | Short (< 90 days) | 1–2 years | No | Auto-expires; cannot be used retroactively |
-| GitHub tokens (`GITHUB_TOKEN`) | PAT or installation token | Short (rotatable) | 2–3 years | No | Should be rotated periodically |
-| Webhook secrets | HMAC signing keys | Medium (1–3 years typical) | 3–5 years | No | Only protects integrity, not confidentiality |
-| Encryption key (`OPTIO_ENCRYPTION_KEY`) | Master AES-256 key | Long (life of deployment) | 10+ years | Monitor | AES-256 remains PQ-safe; risk is key exposure, not algorithm break |
-| GitHub App private key | RSA PEM | Medium (1–3 years) | 3–5 years | No | JWTs expire in 10 minutes; HNDL value is minimal |
-| Session tokens | User auth tokens | Short (30-day TTL) | 1–2 years | No | Only hash is stored; token is ephemeral |
+| Secret type                              | Example                   | Shelf life (x)              | x + y     | Migrate now? | Notes                                                              |
+| ---------------------------------------- | ------------------------- | --------------------------- | --------- | ------------ | ------------------------------------------------------------------ |
+| API keys (`ANTHROPIC_API_KEY`)           | Anthropic API key         | Short (rotatable, < 1 year) | 2–3 years | No           | Rotate regularly; HNDL risk is low                                 |
+| OAuth tokens (`CLAUDE_CODE_OAUTH_TOKEN`) | Claude subscription token | Short (< 90 days)           | 1–2 years | No           | Auto-expires; cannot be used retroactively                         |
+| GitHub tokens (`GITHUB_TOKEN`)           | PAT or installation token | Short (rotatable)           | 2–3 years | No           | Should be rotated periodically                                     |
+| Webhook secrets                          | HMAC signing keys         | Medium (1–3 years typical)  | 3–5 years | No           | Only protects integrity, not confidentiality                       |
+| Encryption key (`OPTIO_ENCRYPTION_KEY`)  | Master AES-256 key        | Long (life of deployment)   | 10+ years | Monitor      | AES-256 remains PQ-safe; risk is key exposure, not algorithm break |
+| GitHub App private key                   | RSA PEM                   | Medium (1–3 years)          | 3–5 years | No           | JWTs expire in 10 minutes; HNDL value is minimal                   |
+| Session tokens                           | User auth tokens          | Short (30-day TTL)          | 1–2 years | No           | Only hash is stored; token is ephemeral                            |
 
 **Conclusion**: No secret type currently triggers the Mosca inequality for
 immediate migration. AES-256-GCM (the only long-shelf-life primitive) is
@@ -98,7 +99,7 @@ not PQ-safe but has very low HNDL (harvest-now, decrypt-later) value due to
   - Otherwise: derived as `SHA-256("{OPTIO_ENCRYPTION_KEY}:credential-secret")`.
 - **Helm template** (`secrets.yaml` line 60):
   ```yaml
-  OPTIO_CREDENTIAL_SECRET: {{ printf "%s:credential-secret" .Values.encryption.key | sha256sum }}
+  OPTIO_CREDENTIAL_SECRET: { { printf "%s:credential-secret" .Values.encryption.key | sha256sum } }
   ```
   This ensures the Helm-deployed value matches the runtime derivation.
 - **Purpose**: Used by agent pods to authenticate to the API via HMAC signatures.
@@ -123,22 +124,22 @@ not PQ-safe but has very low HNDL (harvest-now, decrypt-later) value due to
 
 ### Already PQ-safe
 
-| Primitive | Why it's safe |
-|---|---|
-| AES-256-GCM (secrets at rest) | Grover's algorithm reduces effective security to 128 bits, still well above the security margin. No known quantum speedup for GCM authentication. |
-| SHA-256 (session tokens, credential derivation) | Grover's reduces pre-image resistance to 128 bits. Collision resistance reduced to 2^128 (still sufficient). |
-| HMAC-SHA256 (webhooks, internal auth) | Same SHA-256 reasoning; HMAC construction adds no quantum vulnerability. |
-| Kubernetes API TLS on K8s >= 1.33 | Go 1.24 defaults to X25519MLKEM768 hybrid key exchange. See [docs/pq-readiness.md](pq-readiness.md). |
-| Outbound TLS to PQ-capable servers | Node.js / OpenSSL negotiate X25519MLKEM768 when the server supports it. |
+| Primitive                                       | Why it's safe                                                                                                                                     |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AES-256-GCM (secrets at rest)                   | Grover's algorithm reduces effective security to 128 bits, still well above the security margin. No known quantum speedup for GCM authentication. |
+| SHA-256 (session tokens, credential derivation) | Grover's reduces pre-image resistance to 128 bits. Collision resistance reduced to 2^128 (still sufficient).                                      |
+| HMAC-SHA256 (webhooks, internal auth)           | Same SHA-256 reasoning; HMAC construction adds no quantum vulnerability.                                                                          |
+| Kubernetes API TLS on K8s >= 1.33               | Go 1.24 defaults to X25519MLKEM768 hybrid key exchange. See [docs/pq-readiness.md](pq-readiness.md).                                              |
+| Outbound TLS to PQ-capable servers              | Node.js / OpenSSL negotiate X25519MLKEM768 when the server supports it.                                                                           |
 
 ### Pending migration
 
-| Primitive | Risk | Blocker | Tracking |
-|---|---|---|---|
-| GitHub App JWT (RS256) | Low — JWTs expire in 10 min, minimal HNDL value | GitHub must add PQ-safe App authentication | #324 |
-| Envoy sidecar CA (Ed25519) | Very low — ephemeral, intra-pod, 30-day validity | `OPTIO_ENVOY_CA_ALG=mldsa44` ready when OpenSSL 3.5+ ships ML-DSA | #326 |
-| Helm-generated Postgres/Redis TLS CAs | Low — cluster-internal only | Helm `genCA` must support PQ algorithms | #327 |
-| Outbound TLS to non-PQ servers (GitHub, Anthropic APIs) | Medium — depends on upstream | Upstream providers must enable hybrid TLS | #325 |
+| Primitive                                               | Risk                                             | Blocker                                                           | Tracking |
+| ------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------- | -------- |
+| GitHub App JWT (RS256)                                  | Low — JWTs expire in 10 min, minimal HNDL value  | GitHub must add PQ-safe App authentication                        | #324     |
+| Envoy sidecar CA (Ed25519)                              | Very low — ephemeral, intra-pod, 30-day validity | `OPTIO_ENVOY_CA_ALG=mldsa44` ready when OpenSSL 3.5+ ships ML-DSA | #326     |
+| Helm-generated Postgres/Redis TLS CAs                   | Low — cluster-internal only                      | Helm `genCA` must support PQ algorithms                           | #327     |
+| Outbound TLS to non-PQ servers (GitHub, Anthropic APIs) | Medium — depends on upstream                     | Upstream providers must enable hybrid TLS                         | #325     |
 
 ### Tracking issues
 
@@ -175,13 +176,13 @@ The audit identified two categories of crypto-agility improvements:
 
 ### CNSA 2.0 (NSA Commercial National Security Algorithm Suite 2.0)
 
-| CNSA 2.0 requirement | Deadline | Optio status |
-|---|---|---|
-| Prefer PQ algorithms for new software | 2025 | Partial — symmetric crypto (AES-256, SHA-256, HMAC) is compliant; asymmetric (RSA, Ed25519) pending upstream support |
-| Software/firmware signing: ML-DSA | 2025 | N/A — Optio does not sign software releases |
-| Web browsers/servers: ML-KEM + ML-DSA | 2025 | Partial — TLS 1.3 with ML-KEM hybrid available; ML-DSA TLS not yet standard |
-| Traditional public-key exclusive disuse | 2033 | On track — all non-PQ primitives have identified migration paths with external blockers (GitHub, Helm) |
-| Symmetric algorithms | No change required | Compliant — AES-256 and SHA-256/384 are CNSA 2.0 approved |
+| CNSA 2.0 requirement                    | Deadline           | Optio status                                                                                                         |
+| --------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Prefer PQ algorithms for new software   | 2025               | Partial — symmetric crypto (AES-256, SHA-256, HMAC) is compliant; asymmetric (RSA, Ed25519) pending upstream support |
+| Software/firmware signing: ML-DSA       | 2025               | N/A — Optio does not sign software releases                                                                          |
+| Web browsers/servers: ML-KEM + ML-DSA   | 2025               | Partial — TLS 1.3 with ML-KEM hybrid available; ML-DSA TLS not yet standard                                          |
+| Traditional public-key exclusive disuse | 2033               | On track — all non-PQ primitives have identified migration paths with external blockers (GitHub, Helm)               |
+| Symmetric algorithms                    | No change required | Compliant — AES-256 and SHA-256/384 are CNSA 2.0 approved                                                            |
 
 ### FIPS 140-3
 
