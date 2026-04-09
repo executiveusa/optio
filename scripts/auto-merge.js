@@ -8,7 +8,7 @@
  * - PR is in mergeable state
  */
 
-const https = require('https');
+import https from 'https';
 
 const REPO_OWNER = 'executiveusa';
 const REPO_NAME = 'optio';
@@ -227,4 +227,4 @@ async function main() {
   }
 }
 
-main();
+await main();
