@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Metamorfosis™ — Onboarding</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;700&family=DM+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style>
+    :root {
+      --bg:           #0c0d0a;
+      --bg-2:         #111410;
+      --bg-3:         #181c14;
+      --bg-4:         #1e2318;
+      --gold:         #c4963c;
+      --gold-light:   #ddb85a;
+      --gold-dim:     rgba(196,150,60,0.4);
+      --gold-glow:    rgba(196,150,60,0.1);
+      --gold-border:  rgba(196,150,60,0.18);
+      --sage:         #5a7a52;
+      --sage-light:   #78a06a;
+      --sage-dim:     rgba(90,122,82,0.3);
+      --rust:         #b05c38;
+      --ink:          #e8e2d4;
+      --ink-dim:      #a09880;
+      --ink-muted:    #5a5448;
+      --font-display: 'Playfair Display', serif;
+      --font-body:    'DM Sans', sans-serif;
+      --font-mono:    'DM Mono', monospace;
+      --font-accent:  'Plus Jakarta Sans', sans-serif;
+      --ease:         cubic-bezier(0.16, 1, 0.3, 1);
+      --safe-bottom:  max(24px, env(safe-area-inset-bottom));
+    }
+
+    *, *::before, *::after { box-sizing: border-box !important; margin: 0 !important; padding: 0 !important; }
+    html, body { height: 100% !important; overflow: hidden !important; }
+    body {
+      font-family: var(--font-body) !important;
+      background: var(--bg) !important;
+      color: var(--ink) !important;
+      -webkit-font-smoothing: antialiased !important;
+    }
+
+    .onboarding {
+      display: flex; flex-direction: column;
+      height: 100vh; height: 100dvh;
+      max-width: 480px; margin: 0 auto !important;
+      position: relative; overflow: hidden;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .onboard-progress {
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px; z-index: 10;
+      background: var(--bg-3);
+    }
+    .onboard-progress-fill {
+      height: 100%; width: 16.6%;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light));
+      border-radius: 0 3px 3px 0;
+      transition: width 500ms var(--ease);
+    }
+
+    /* ── STEPS ── */
+    .steps-container {
+      flex: 1; position: relative; overflow: hidden;
+    }
+    .step {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      padding: 40px 24px !important;
+      opacity: 0; transform: translateX(60px);
+      pointer-events: none;
+      transition: all 500ms var(--ease);
+    }
+    .step.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+    .step.past { opacity: 0; transform: translateX(-60px); }
+
+    .step-icon {
+      font-size: 56px; margin-bottom: 32px !important;
+    }
+    .step-title {
+      font-family: var(--font-display) !important;
+      font-size: 28px !important; font-weight: 700 !important;
+      color: var(--ink) !important;
+      text-align: center !important;
+      line-height: 1.2 !important;
+    }
+    .step-subtitle {
+      font-size: 15px !important;
+      color: var(--ink-dim) !important;
+      text-align: center !important;
+      margin-top: 12px !important;
+      max-width: 300px;
+      line-height: 1.5 !important;
+    }
+
+    /* ── CHAT ONBOARDING ── */
+    .onboard-chat {
+      flex: 1; display: flex; flex-direction: column;
+      padding: 0 !important;
+    }
+    .onboard-chat-header {
+      padding: 24px 24px 16px !important;
+    }
+    .onboard-chat-messages {
+      flex: 1; overflow-y: auto;
+      padding: 0 24px !important;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .onboard-msg {
+      max-width: 85%; padding: 12px 16px !important;
+      border-radius: 16px; font-size: 14px !important;
+      line-height: 1.5 !important;
+      opacity: 0; transform: translateY(12px);
+      animation: msgAppear 400ms var(--ease) forwards;
+    }
+    .onboard-msg.ai {
+      align-self: flex-start;
+      background: var(--bg-3); color: var(--ink);
+      border: 1px solid var(--gold-border);
+      border-bottom-left-radius: 4px;
+    }
+    .onboard-msg.user {
+      align-self: flex-end;
+      background: var(--gold); color: var(--bg);
+      border-bottom-right-radius: 4px;
+      font-weight: 500 !important;
+    }
+    @keyframes msgAppear {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── OPTION CHIPS ── */
+    .option-chips {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      padding: 16px 24px !important;
+    }
+    .option-chip {
+      padding: 10px 18px !important;
+      border-radius: 999px;
+      background: var(--bg-3) !important;
+      border: 1px solid var(--gold-border) !important;
+      color: var(--ink) !important;
+      font-family: var(--font-body) !important;
+      font-size: 14px !important;
+      cursor: pointer;
+      transition: all 200ms var(--ease);
+    }
+    .option-chip:hover {
+      border-color: var(--gold-dim) !important;
+      background: var(--bg-4) !important;
+    }
+    .option-chip.selected {
+      background: var(--gold) !important;
+      border-color: var(--gold) !important;
+      color: var(--bg) !important;
+      font-weight: 500 !important;
+    }
+    .option-chip.multi.selected {
+      background: rgba(196,150,60,0.2) !important;
+      border-color: var(--gold) !important;
+      color: var(--gold) !important;
+    }
+
+    /* ── BUTTONS ── */
+    .onboard-footer {
+      padding: 16px 24px var(--safe-bottom) !important;
+      display: flex; gap: 12px;
+    }
+    .onboard-btn {
+      flex: 1; padding: 14px !important;
+      border-radius: 12px;
+      font-family: var(--font-accent) !important;
+      font-size: 15px !important; font-weight: 600 !important;
+      cursor: pointer; transition: all 200ms var(--ease);
+      text-align: center;
+    }
+    .onboard-btn.primary {
+      background: var(--gold) !important;
+      color: var(--bg) !important;
+      border: none !important;
+    }
+    .onboard-btn.primary:hover { background: var(--gold-light) !important; }
+    .onboard-btn.secondary {
+      background: var(--bg-3) !important;
+      color: var(--ink-dim) !important;
+      border: 1px solid var(--gold-border) !important;
+    }
+    .onboard-btn.primary:disabled {
+      opacity: 0.4 !important; cursor: default !important;
+    }
+
+    /* ── NAME INPUT ── */
+    .name-input {
+      width: 100%; padding: 14px 20px !important;
+      border-radius: 12px;
+      background: var(--bg) !important;
+      border: 1px solid var(--gold-border) !important;
+      color: var(--ink) !important;
+      font-family: var(--font-body) !important;
+      font-size: 16px !important;
+      outline: none !important;
+      text-align: center !important;
+      transition: border-color 200ms var(--ease);
+      margin: 24px 0 !important;
+    }
+    .name-input::placeholder { color: var(--ink-muted) !important; }
+    .name-input:focus { border-color: var(--gold) !important; }
+
+    /* ── SECURITY ── */
+    .security-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      padding: 16px 24px !important; width: 100%;
+    }
+    .security-card {
+      padding: 16px !important; border-radius: 12px;
+      background: var(--bg-3);
+      border: 1px solid var(--gold-border);
+      text-align: center;
+    }
+    .security-card-icon {
+      display: flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--gold-glow); border: 1px solid var(--gold-border);
+      color: var(--gold); margin: 0 auto 10px !important;
+    }
+    .security-card-title {
+      font-family: var(--font-accent) !important;
+      font-size: 13px !important; font-weight: 600 !important;
+      color: var(--ink) !important;
+    }
+    .security-card-desc {
+      font-size: 11px !important; color: var(--ink-muted) !important;
+      margin-top: 4px !important; line-height: 1.4 !important;
+    }
+
+    /* ── AMBIENT GLOW ── */
+    .ambient-glow {
+      position: absolute; top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle at 50% 50%,
+        rgba(196,150,60,0.04) 0%,
+        transparent 50%
+      );
+      animation: ambientDrift 12s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes ambientDrift {
+      0%, 100% { transform: translate(0, 0); }
+      33% { transform: translate(20px, -20px); }
+      66% { transform: translate(-15px, 10px); }
+    }
+
+    .step-mono {
+      font-family: var(--font-mono) !important;
+      font-size: 10px !important;
+      letter-spacing: 1.5px !important;
+      text-transform: uppercase !important;
+      color: var(--gold) !important;
+      margin-bottom: 16px !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="onboarding">
+  <div class="ambient-glow"></div>
+
+  <div class="onboard-progress">
+    <div class="onboard-progress-fill" id="progressFill"></div>
+  </div>
+
+  <div class="steps-container">
+
+    <!-- STEP 1: Welcome -->
+    <div class="step active" id="step-1">
+      <div class="step-icon">🦋</div>
+      <div class="step-mono">Bienvenida</div>
+      <div class="step-title">Tu metamorfosis<br>comienza aquí</div>
+      <div class="step-subtitle">No es solo ejercicio.<br>Es tu salud completa, tu espíritu, tu crecimiento.</div>
+    </div>
+
+    <!-- STEP 2: Name -->
+    <div class="step" id="step-2">
+      <div class="step-icon">✨</div>
+      <div class="step-mono">¿Cómo te llamas?</div>
+      <div class="step-title">Hagamos esto personal</div>
+      <div class="step-subtitle">Tu nombre nos ayuda a personalizar toda tu experiencia</div>
+      <input class="name-input" type="text" placeholder="Tu nombre" id="nameInput" autocomplete="off">
+    </div>
+
+    <!-- STEP 3: Goals (chat-style) -->
+    <div class="step" id="step-3" style="justify-content:flex-start;padding-top:60px !important;">
+      <div class="onboard-chat" style="width:100%;">
+        <div class="onboard-chat-header">
+          <div class="step-mono">Tus Metas</div>
+          <div class="step-title" style="text-align:left;font-size:22px !important;">¿Qué buscas en tu transformación?</div>
+        </div>
+        <div class="onboard-chat-messages" id="goalsChat">
+          <div class="onboard-msg ai" style="animation-delay:0.2s;">
+            ¡Hola <span id="userName">amiga</span>! 🦋 Me encanta que estés aquí. ¿Cuáles son tus prioridades?
+          </div>
+        </div>
+        <div class="option-chips" id="goalChips">
+          <button class="option-chip multi" onclick="toggleGoal(this)">🍽️ Nutrición</button>
+          <button class="option-chip multi" onclick="toggleGoal(this)">🧘 Mente & espíritu</button>
+          <button class="option-chip multi" onclick="toggleGoal(this)">💪 Fitness</button>
+          <button class="option-chip multi" onclick="toggleGoal(this)">⚖️ Peso saludable</button>
+          <button class="option-chip multi" onclick="toggleGoal(this)">😴 Mejor sueño</button>
+          <button class="option-chip multi" onclick="toggleGoal(this)">🧠 Claridad mental</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Diet preference -->
+    <div class="step" id="step-4" style="justify-content:flex-start;padding-top:60px !important;">
+      <div class="onboard-chat" style="width:100%;">
+        <div class="onboard-chat-header">
+          <div class="step-mono">Alimentación</div>
+          <div class="step-title" style="text-align:left;font-size:22px !important;">¿Cómo te alimentas?</div>
+        </div>
+        <div class="onboard-chat-messages">
+          <div class="onboard-msg ai" style="animation-delay:0.2s;">
+            Respeto tu forma de comer. Todo se personaliza a ti.
+          </div>
+        </div>
+        <div class="option-chips" id="dietChips">
+          <button class="option-chip" onclick="selectDiet(this)">🌱 Vegetariana</button>
+          <button class="option-chip" onclick="selectDiet(this)">🥑 Vegana</button>
+          <button class="option-chip" onclick="selectDiet(this)">🥩 Omnívora</button>
+          <button class="option-chip" onclick="selectDiet(this)">🐟 Pescetariana</button>
+          <button class="option-chip" onclick="selectDiet(this)">🌾 Sin gluten</button>
+          <button class="option-chip" onclick="selectDiet(this)">🥜 Sin lácteos</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: Security -->
+    <div class="step" id="step-5">
+      <div class="step-icon">🔒</div>
+      <div class="step-mono">Tu Privacidad</div>
+      <div class="step-title">Tus datos son<br>solo tuyos</div>
+      <div class="step-subtitle">Encriptamos todo de punta a punta. Nadie más tiene acceso.</div>
+      <div class="security-grid">
+        <div class="security-card">
+          <div class="security-card-icon"><i data-lucide="shield-check" style="width:20px;height:20px;"></i></div>
+          <div class="security-card-title">E2E Encriptado</div>
+          <div class="security-card-desc">Tus datos viajan seguros</div>
+        </div>
+        <div class="security-card">
+          <div class="security-card-icon"><i data-lucide="key" style="width:20px;height:20px;"></i></div>
+          <div class="security-card-title">BYOK</div>
+          <div class="security-card-desc">Usa tu propia API key</div>
+        </div>
+        <div class="security-card">
+          <div class="security-card-icon"><i data-lucide="eye-off" style="width:20px;height:20px;"></i></div>
+          <div class="security-card-title">Zero-Knowledge</div>
+          <div class="security-card-desc">No vemos tus mensajes</div>
+        </div>
+        <div class="security-card">
+          <div class="security-card-icon"><i data-lucide="hard-drive" style="width:20px;height:20px;"></i></div>
+          <div class="security-card-title">Local First</div>
+          <div class="security-card-desc">Datos en tu dispositivo</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 6: Ready -->
+    <div class="step" id="step-6">
+      <div class="step-icon">🦋</div>
+      <div class="step-mono">Todo Listo</div>
+      <div class="step-title">Tu transformación<br>empieza ahora</div>
+      <div class="step-subtitle">Tu guía personal te espera. Solo habla, pregunta, crece.</div>
+    </div>
+
+  </div>
+
+  <div class="onboard-footer" id="onboardFooter">
+    <button class="onboard-btn secondary" id="backBtn" style="display:none;" onclick="prevStep()">Atrás</button>
+    <button class="onboard-btn primary" id="nextBtn" onclick="nextStep()">Comenzar</button>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+
+  let currentStep = 1;
+  const totalSteps = 6;
+  const progressFill = document.getElementById('progressFill');
+  const nextBtn = document.getElementById('nextBtn');
+  const backBtn = document.getElementById('backBtn');
+
+  const stepLabels = {
+    1: 'Comenzar',
+    2: 'Continuar',
+    3: 'Siguiente',
+    4: 'Siguiente',
+    5: 'Aceptar & Continuar',
+    6: '¡Vamos! 🦋'
+  };
+
+  function updateUI() {
+    progressFill.style.width = ((currentStep / totalSteps) * 100) + '%';
+    nextBtn.textContent = stepLabels[currentStep];
+    backBtn.style.display = currentStep > 1 ? 'block' : 'none';
+
+    document.querySelectorAll('.step').forEach((s, i) => {
+      s.classList.remove('active', 'past');
+      if (i + 1 === currentStep) s.classList.add('active');
+      if (i + 1 < currentStep) s.classList.add('past');
+    });
+
+    // Name step validation
+    if (currentStep === 2) {
+      const nameInput = document.getElementById('nameInput');
+      nextBtn.disabled = !nameInput.value.trim();
+      nameInput.oninput = () => { nextBtn.disabled = !nameInput.value.trim(); };
+    } else {
+      nextBtn.disabled = false;
+    }
+  }
+
+  function nextStep() {
+    if (currentStep === 2) {
+      const name = document.getElementById('nameInput').value.trim();
+      if (name) document.getElementById('userName').textContent = name;
+    }
+    if (currentStep === 6) {
+      // Go to main app
+      document.querySelector('.onboarding').style.opacity = '0';
+      document.querySelector('.onboarding').style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        window.location.href = 'metamorfosis_app_2.html';
+      }, 500);
+      return;
+    }
+    if (currentStep < totalSteps) {
+      currentStep++;
+      updateUI();
+    }
+  }
+
+  function prevStep() {
+    if (currentStep > 1) {
+      currentStep--;
+      updateUI();
+    }
+  }
+
+  function toggleGoal(el) {
+    el.classList.toggle('selected');
+  }
+
+  function selectDiet(el) {
+    document.querySelectorAll('#dietChips .option-chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  updateUI();
+</script>
+</body>
+</html>

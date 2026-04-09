@@ -1,0 +1,71 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   METAMORFOSIS — Brand Theme v2.0
+   Extracted from butterfly logo: morpho blue, heritage gold, lotus violet
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─── Core Palette ─────────────────────────────────────────────── */
+  --meta-void:           oklch(0.12 0.015 250);   /* #0a0e1a — deep space bg */
+  --meta-void-warm:      oklch(0.14 0.010 260);   /* #0e1222 — elevated bg */
+  --meta-surface:        oklch(0.18 0.012 255);    /* #141a2e — card/panel bg */
+  --meta-surface-raised: oklch(0.22 0.010 250);    /* #1a2038 — hover surface */
+
+  /* ─── Brand Blues (Morpho Butterfly Wings) ─────────────────────── */
+  --meta-morpho:         oklch(0.62 0.180 240);    /* #2b8fd9 — primary blue */
+  --meta-morpho-light:   oklch(0.78 0.140 210);    /* #5ec4e8 — highlight cyan */
+  --meta-morpho-deep:    oklch(0.45 0.160 250);    /* #1a5fa0 — deep wing blue */
+  --meta-morpho-dim:     oklch(0.35 0.100 245);    /* #163464 — muted blue */
+
+  /* ─── Heritage Gold (Wing Veining + Circular Emblem) ───────────── */
+  --meta-gold:           oklch(0.65 0.140 75);     /* #c4963c — primary gold */
+  --meta-gold-light:     oklch(0.75 0.120 80);     /* #d4a542 — accent gold */
+  --meta-gold-deep:      oklch(0.50 0.120 65);     /* #8b5e1e — deep gold */
+  --meta-gold-glow:      oklch(0.82 0.100 85);     /* #e8d080 — chrysalis glow */
+
+  /* ─── Lotus Violet ─────────────────────────────────────────────── */
+  --meta-lotus:          oklch(0.50 0.180 310);    /* #9b4dca — violet accent */
+  --meta-lotus-soft:     oklch(0.60 0.120 310);    /* #b07dd4 — soft violet */
+  --meta-lotus-deep:     oklch(0.38 0.150 310);    /* #6b2d9a — deep violet */
+
+  /* ─── Semantic ─────────────────────────────────────────────────── */
+  --meta-success:        oklch(0.62 0.150 145);    /* #4a9a5a — alive/growth */
+  --meta-warning:        oklch(0.72 0.140 70);     /* #d4a030 — caution */
+  --meta-danger:         oklch(0.55 0.200 25);     /* #c84040 — error/danger */
+
+  /* ─── Text ─────────────────────────────────────────────────────── */
+  --meta-text-primary:   oklch(0.94 0.008 250);    /* #edf0f5 — powder mist */
+  --meta-text-secondary: oklch(0.72 0.015 250);    /* #a0a8b8 — muted */
+  --meta-text-tertiary:  oklch(0.52 0.015 250);    /* #606878 — dim */
+
+  /* ─── Borders ──────────────────────────────────────────────────── */
+  --meta-border:         oklch(0.25 0.015 250 / 0.6); /* subtle */
+  --meta-border-accent:  oklch(0.62 0.180 240 / 0.3); /* morpho tint */
+  --meta-border-gold:    oklch(0.65 0.140 75 / 0.25); /* gold tint */
+
+  /* ─── Typography ───────────────────────────────────────────────── */
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ─── Spacing Scale ────────────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+
+  /* ─── Radii ────────────────────────────────────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* ─── Shadows ──────────────────────────────────────────────────── */
+  --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.2);
+  --shadow-md: 0 2px 8px oklch(0 0 0 / 0.25);
+  --shadow-glow-blue: 0 0 20px oklch(0.62 0.18 240 / 0.15);
+  --shadow-glow-gold: 0 0 20px oklch(0.65 0.14 75 / 0.15);
+}

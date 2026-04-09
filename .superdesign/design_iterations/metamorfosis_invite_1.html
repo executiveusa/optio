@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metamorfosis™ — Lista de Espera</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --bg:          #0c0d0a;
+      --bg-2:        #111410;
+      --bg-3:        #181c14;
+      --gold:        #c4963c;
+      --gold-light:  #ddb85a;
+      --gold-border: rgba(196,150,60,0.18);
+      --gold-glow:   rgba(196,150,60,0.07);
+      --sage:        #5a7a52;
+      --sage-light:  #78a06a;
+      --ink:         #e8e2d4;
+      --ink-dim:     #a09880;
+      --ink-muted:   #5a5448;
+      --font-d: 'Playfair Display', serif;
+      --font-b: 'DM Sans', sans-serif;
+      --font-m: 'DM Mono', monospace;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    *, *::before, *::after { box-sizing: border-box !important; margin: 0 !important; padding: 0 !important; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-b) !important;
+      background: var(--bg) !important;
+      color: var(--ink) !important;
+      -webkit-font-smoothing: antialiased !important;
+      overflow-x: hidden !important;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 48px !important;
+      border-bottom: 1px solid transparent;
+      transition: all 300ms var(--ease);
+    }
+    nav.scrolled {
+      background: rgba(12,13,10,0.92) !important;
+      border-bottom-color: var(--gold-border) !important;
+      padding: 14px 48px !important;
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-family: var(--font-d) !important;
+      font-size: 18px !important; letter-spacing: 2px !important;
+      color: var(--ink) !important; text-decoration: none;
+    }
+    .nav-logo span { color: var(--gold); }
+    .nav-right { display: flex; align-items: center; gap: 24px; }
+    .nav-link {
+      font-family: var(--font-m) !important;
+      font-size: 10px !important; letter-spacing: 1.5px !important;
+      text-transform: uppercase !important;
+      color: var(--ink-muted) !important;
+      text-decoration: none !important;
+      transition: color 150ms var(--ease);
+    }
+    .nav-link:hover { color: var(--ink) !important; }
+    .nav-cta {
+      padding: 8px 20px !important;
+      border: 1px solid var(--gold-border) !important;
+      border-radius: 6px;
+      font-family: var(--font-m) !important;
+      font-size: 10px !important; letter-spacing: 1.5px !important;
+      text-transform: uppercase !important;
+      color: var(--gold) !important;
+      background: none !important;
+      cursor: pointer;
+      transition: all 150ms var(--ease);
+    }
+    .nav-cta:hover {
+      border-color: var(--gold) !important;
+      background: var(--gold-glow) !important;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 120px 24px 80px !important;
+      text-align: center; position: relative;
+    }
+    .hero-eyebrow {
+      font-family: var(--font-m) !important;
+      font-size: 10px !important; letter-spacing: 2px !important;
+      text-transform: uppercase !important;
+      color: var(--gold) !important;
+      margin-bottom: 28px !important;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .hero-eyebrow::before, .hero-eyebrow::after {
+      content: '';
+      display: block; width: 32px; height: 1px;
+      background: var(--gold-border);
+    }
+    .hero h1 {
+      font-family: var(--font-d) !important;
+      font-size: clamp(40px, 8vw, 80px) !important;
+      font-weight: 700 !important;
+      color: var(--ink) !important;
+      line-height: 1.05 !important;
+      max-width: 800px;
+      margin-bottom: 28px !important;
+    }
+    .hero h1 em {
+      font-style: italic !important;
+      color: var(--gold) !important;
+    }
+    .hero-sub {
+      font-size: 18px !important;
+      color: var(--ink-dim) !important;
+      max-width: 480px;
+      line-height: 1.6 !important;
+      margin-bottom: 52px !important;
+    }
+
+    /* ── WAITLIST FORM ── */
+    .waitlist-box {
+      background: var(--bg-2);
+      border: 1px solid var(--gold-border);
+      border-radius: 16px;
+      padding: 32px !important;
+      width: 100%; max-width: 440px;
+      margin-bottom: 20px !important;
+    }
+    .waitlist-tabs {
+      display: flex; gap: 0;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 4px !important;
+      margin-bottom: 24px !important;
+    }
+    .waitlist-tab {
+      flex: 1; padding: 8px !important;
+      border-radius: 6px;
+      font-family: var(--font-m) !important;
+      font-size: 10px !important; letter-spacing: 1px !important;
+      text-transform: uppercase !important;
+      color: var(--ink-muted) !important;
+      background: none !important;
+      border: none !important;
+      cursor: pointer;
+      transition: all 200ms var(--ease);
+    }
+    .waitlist-tab.active {
+      background: var(--bg-3) !important;
+      color: var(--ink) !important;
+      border: 1px solid var(--gold-border) !important;
+    }
+    .waitlist-input {
+      width: 100%; padding: 12px 16px !important;
+      border-radius: 8px;
+      background: var(--bg) !important;
+      border: 1px solid var(--gold-border) !important;
+      color: var(--ink) !important;
+      font-family: var(--font-b) !important;
+      font-size: 14px !important;
+      outline: none !important;
+      margin-bottom: 10px !important;
+      transition: border-color 150ms var(--ease);
+    }
+    .waitlist-input::placeholder { color: var(--ink-muted) !important; }
+    .waitlist-input:focus { border-color: var(--gold) !important; }
+    .waitlist-btn {
+      width: 100%; padding: 14px !important;
+      border-radius: 8px;
+      background: var(--gold) !important;
+      color: var(--bg) !important;
+      border: none !important;
+      font-family: var(--font-b) !important;
+      font-size: 15px !important; font-weight: 600 !important;
+      cursor: pointer;
+      transition: background 200ms var(--ease);
+      margin-top: 4px !important;
+    }
+    .waitlist-btn:hover { background: var(--gold-light) !important; }
+    .waitlist-note {
+      font-family: var(--font-m) !important;
+      font-size: 10px !important; letter-spacing: 1px !important;
+      color: var(--ink-muted) !important;
+      text-align: center !important;
+      margin-top: 14px !important;
+    }
+    .waitlist-count {
+      font-family: var(--font-m) !important;
+      font-size: 11px !important; letter-spacing: 1px !important;
+      color: var(--ink-muted) !important;
+      display: flex; align-items: center; gap: 8px;
+      justify-content: center !important;
+    }
+    .waitlist-count .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sage-light); }
+    .invite-panel { display: none; }
+    .invite-panel.active { display: block; }
+    .waitlist-panel.active { display: block; }
+    .waitlist-panel { display: none; }
+    div[data-tab="waitlist"] { display: block; }
+
+    /* ── SOCIAL PROOF ── */
+    .avatars-row {
+      display: flex; align-items: center; gap: -8px;
+      justify-content: center !important;
+      margin-bottom: 12px !important;
+    }
+    .avatar-circle {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid var(--bg-2);
+      margin-left: -8px !important;
+      overflow: hidden;
+    }
+    .avatar-circle:first-child { margin-left: 0 !important; }
+    .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ── DIVIDER ── */
+    .section-divider {
+      border: none !important; border-top: 1px solid var(--gold-border) !important;
+      margin: 80px auto !important; max-width: 120px;
+    }
+
+    /* ── PILLARS ── */
+    .pillars {
+      padding: 80px 48px !important;
+      max-width: 1080px; margin: 0 auto !important;
+    }
+    .pillars-header {
+      text-align: center; margin-bottom: 64px !important;
+    }
+    .pillars-eyebrow {
+      font-family: var(--font-m) !important;
+      font-size: 10px !important; letter-spacing: 2px !important;
+      text-transform: uppercase !important;
+      color: var(--gold) !important;
+      margin-bottom: 16px !important;
+    }
+    .pillars-title {
+      font-family: var(--font-d) !important;
+      font-size: clamp(28px, 4vw, 42px) !important;
+      font-weight: 700 !important;
+      color: var(--ink) !important;
+    }
+    .pillars-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+      border: 1px solid var(--gold-border);
+      border-radius: 16px; overflow: hidden;
+    }
+    .pillar {
+      padding: 40px 32px !important;
+      background: var(--bg-2);
+      border-right: 1px solid var(--gold-border);
+    }
+    .pillar:last-child { border-right: none !important; }
+    .pillar-number {
+      font-family: var(--font-m) !important;
+      font-size: 10px !important; letter-spacing: 2px !important;
+      color: var(--gold) !important;
+      margin-bottom: 20px !important;
+    }
+    .pillar-icon {
+      font-size: 28px;
+      margin-bottom: 16px !important;
+    }
+    .pillar h3 {
+      font-family: var(--font-d) !important;
+      font-size: 20px !important; font-weight: 700 !important;
+      color: var(--ink) !important;
+      margin-bottom: 10px !important;
+    }
+    .pillar p {
+      font-size: 14px !important;
+      color: var(--ink-dim) !important;
+      line-height: 1.6 !important;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .how {
+      padding: 80px 48px !important;
+      max-width: 880px; margin: 0 auto !important;
+    }
+    .how-step {
+      display: flex; gap: 32px; align-items: flex-start;
+      padding: 32px 0 !important;
+      border-bottom: 1px solid var(--gold-border);
+    }
+    .how-step:last-child { border-bottom: none !important; }
+    .how-number {
+      font-family: var(--font-m) !important;
+      font-size: 12px !important; letter-spacing: 2px !important;
+      color: var(--gold) !important;
+      min-width: 32px;
+      padding-top: 4px !important;
+    }
+    .how-content h4 {
+      font-family: var(--font-d) !important;
+      font-size: 22px !important; font-weight: 700 !important;
+      color: var(--ink) !important;
+      margin-bottom: 8px !important;
+    }
+    .how-content p {
+      font-size: 15px !important;
+      color: var(--ink-dim) !important;
+      line-height: 1.6 !important;
+    }
+
+    /* ── MANIFESTO ── */
+    .manifesto {
+      padding: 100px 48px !important;
+      max-width: 700px; margin: 0 auto !important;
+      text-align: center;
+    }
+    .manifesto blockquote {
+      font-family: var(--font-d) !important;
+      font-size: clamp(22px, 3.5vw, 36px) !important;
+      font-style: italic !important;
+      color: var(--ink) !important;
+      line-height: 1.5 !important;
+    }
+    .manifesto cite {
+      display: block;
+      font-family: var(--font-m) !important;
+      font-size: 10px !important; letter-spacing: 2px !important;
+      text-transform: uppercase !important;
+      color: var(--ink-muted) !important;
+      margin-top: 24px !important;
+      font-style: normal !important;
+    }
+
+    /* ── CTA BOTTOM ── */
+    .cta-section {
+      padding: 100px 24px !important;
+      text-align: center;
+      border-top: 1px solid var(--gold-border);
+    }
+    .cta-section h2 {
+      font-family: var(--font-d) !important;
+      font-size: clamp(28px, 5vw, 52px) !important;
+      font-weight: 700 !important;
+      color: var(--ink) !important;
+      margin-bottom: 16px !important;
+    }
+    .cta-section p {
+      font-size: 16px !important;
+      color: var(--ink-dim) !important;
+      margin-bottom: 40px !important;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 40px 48px !important;
+      border-top: 1px solid var(--gold-border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .footer-logo {
+      font-family: var(--font-d) !important;
+      font-size: 16px !important; letter-spacing: 2px !important;
+      color: var(--ink-muted) !important;
+    }
+    .footer-logo span { color: var(--gold); }
+    .footer-copy {
+      font-family: var(--font-m) !important;
+      font-size: 9px !important; letter-spacing: 1px !important;
+      color: var(--ink-muted) !important;
+    }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-link {
+      font-family: var(--font-m) !important;
+      font-size: 9px !important; letter-spacing: 1px !important;
+      text-transform: uppercase !important;
+      color: var(--ink-muted) !important;
+      text-decoration: none !important;
+    }
+
+    /* ── SUCCESS STATE ── */
+    .success-msg {
+      text-align: center; padding: 16px !important;
+      display: none;
+    }
+    .success-msg .check-icon {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: rgba(90,122,82,0.15);
+      border: 1px solid rgba(90,122,82,0.3);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--sage-light);
+      margin: 0 auto 16px !important;
+    }
+    .success-msg h3 {
+      font-family: var(--font-d) !important;
+      font-size: 20px !important;
+      color: var(--ink) !important;
+      margin-bottom: 8px !important;
+    }
+    .success-msg p {
+      font-size: 14px !important;
+      color: var(--ink-dim) !important;
+      line-height: 1.5 !important;
+    }
+    .success-msg .code-box {
+      margin-top: 16px !important;
+      padding: 12px !important;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--gold-border);
+      font-family: var(--font-m) !important;
+      font-size: 16px !important; letter-spacing: 3px !important;
+      color: var(--gold) !important;
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 16px 20px !important; }
+      nav.scrolled { padding: 12px 20px !important; }
+      .pillars { padding: 60px 20px !important; }
+      .pillars-grid { grid-template-columns: 1fr; }
+      .pillar { border-right: none !important; border-bottom: 1px solid var(--gold-border); }
+      .how { padding: 60px 20px !important; }
+      .manifesto { padding: 60px 20px !important; }
+      footer { flex-direction: column; gap: 16px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">METAMORFOSIS<span>™</span></a>
+  <div class="nav-right">
+    <a href="#como-funciona" class="nav-link">Cómo funciona</a>
+    <a href="#comunidad" class="nav-link">Comunidad</a>
+    <button class="nav-cta" onclick="document.getElementById('waitlist-form').scrollIntoView({behavior:'smooth'})">
+      Acceso anticipado
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Comunidad privada · 2,847 en lista</div>
+  <h1>Para las que<br>no se <em>detienen.</em></h1>
+  <p class="hero-sub">
+    Una guía de vida impulsada por IA, diseñada para mujeres que construyen negocios y cuidan su salud al mismo tiempo.
+  </p>
+
+  <!-- WAITLIST FORM -->
+  <div class="waitlist-box" id="waitlist-form">
+    <div class="waitlist-tabs">
+      <button class="waitlist-tab active" id="tab-waitlist" onclick="switchTab('waitlist')">Lista de espera</button>
+      <button class="waitlist-tab" id="tab-invite" onclick="switchTab('invite')">Tengo invitación</button>
+    </div>
+
+    <!-- WAITLIST PANEL -->
+    <div id="panel-waitlist">
+      <input class="waitlist-input" type="text" id="name-input" placeholder="Tu nombre">
+      <input class="waitlist-input" type="email" id="email-input" placeholder="Tu email">
+      <button class="waitlist-btn" onclick="submitWaitlist()">
+        Solicitar acceso anticipado
+      </button>
+      <p class="waitlist-note">
+        Sin spam · Solo cuando abra tu acceso
+      </p>
+    </div>
+
+    <!-- INVITE PANEL -->
+    <div id="panel-invite" style="display:none;">
+      <input class="waitlist-input" type="text" id="invite-code" placeholder="Código de invitación (ej. MORF-XXXX)" style="text-transform:uppercase;letter-spacing:2px;">
+      <input class="waitlist-input" type="email" placeholder="Tu email">
+      <button class="waitlist-btn" onclick="submitInvite()">
+        Activar mi acceso
+      </button>
+      <p class="waitlist-note">
+        Pide un código a una miembro de la comunidad
+      </p>
+    </div>
+
+    <!-- SUCCESS STATE -->
+    <div class="success-msg" id="success-state">
+      <div class="check-icon">
+        <i data-lucide="check" style="width:20px;height:20px;"></i>
+      </div>
+      <h3>¡Ya estás en lista!</h3>
+      <p>Te avisamos cuando abra tu acceso. Mientras tanto, comparte con amigas y sube en la lista.</p>
+      <div class="code-box" id="referral-code">MORF-2847</div>
+      <p style="font-size:12px;color:var(--ink-muted);margin-top:8px;">Tu código de referido — cada amiga te sube 10 posiciones</p>
+    </div>
+  </div>
+
+  <!-- SOCIAL PROOF -->
+  <div>
+    <div class="avatars-row">
+      <div class="avatar-circle"><img src="https://images.unsplash.com/photo-1494790108755-2616b612b993?w=64&q=80&crop=faces" alt=""></div>
+      <div class="avatar-circle"><img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=64&q=80&crop=faces" alt=""></div>
+      <div class="avatar-circle"><img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=64&q=80&crop=faces" alt=""></div>
+      <div class="avatar-circle"><img src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=64&q=80&crop=faces" alt=""></div>
+      <div class="avatar-circle"><img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=64&q=80&crop=faces" alt=""></div>
+    </div>
+    <div class="waitlist-count">
+      <span class="dot"></span>
+      <span>2,847 mujeres en lista · Ciudad de México, Bogotá, Buenos Aires y más</span>
+    </div>
+  </div>
+</section>
+
+<!-- PILLARS -->
+<section class="pillars" id="comunidad">
+  <div class="pillars-header">
+    <div class="pillars-eyebrow">Lo que construimos juntas</div>
+    <h2 class="pillars-title">No es una app de dietas.<br>Es tu sistema de vida.</h2>
+  </div>
+  <div class="pillars-grid">
+    <div class="pillar">
+      <div class="pillar-number">01</div>
+      <div class="pillar-icon">🧠</div>
+      <h3>Guía IA personal</h3>
+      <p>Conversas con una IA que te conoce profundamente. Nutrición, mentalidad, negocios — todo en un solo chat, en español.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-number">02</div>
+      <div class="pillar-icon">📓</div>
+      <h3>Diario con memoria</h3>
+      <p>Un diario privado que recuerda todo. Escribe libremente — la IA extrae patrones, metas y crecimiento a lo largo del tiempo.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-number">03</div>
+      <div class="pillar-icon">🔗</div>
+      <h3>Tu vida, conectada</h3>
+      <p>Conecta tu calendario, email, apps de salud — tu guía IA trabaja con el contexto real de tu vida, no con datos inventados.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="como-funciona">
+  <div class="pillars-header">
+    <div class="pillars-eyebrow">El camino</div>
+    <h2 class="pillars-title">Simple de usar,<br>poderosa por dentro.</h2>
+  </div>
+  <div class="how-step">
+    <div class="how-number">01</div>
+    <div class="how-content">
+      <h4>Entra con invitación</h4>
+      <p>Metamorfosis es por referido. Una miembro te invita — o solicitas acceso y te avisamos cuando abra tu lugar. Sin masas, sin anuncios.</p>
+    </div>
+  </div>
+  <div class="how-step">
+    <div class="how-number">02</div>
+    <div class="how-content">
+      <h4>Cuéntanos quién eres</h4>
+      <p>En 3 minutos configuras tus metas, dieta, idioma del cuerpo y qué conectas. Todo encriptado en tu dispositivo.</p>
+    </div>
+  </div>
+  <div class="how-step">
+    <div class="how-number">03</div>
+    <div class="how-content">
+      <h4>Sólo habla</h4>
+      <p>El chat es el centro. Pide un plan de comida, escribe en tu diario, pregunta a tu guía — en texto o voz. La IA conecta los puntos.</p>
+    </div>
+  </div>
+  <div class="how-step">
+    <div class="how-number">04</div>
+    <div class="how-content">
+      <h4>Usa tu ChatGPT Plus</h4>
+      <p>Si ya tienes suscripción de ChatGPT, conecta tu API key y usa tu plan directamente. Cero costo adicional por la IA.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MANIFESTO -->
+<section class="manifesto">
+  <blockquote>
+    "El crecimiento no es lineal. No es una dieta de enero ni una racha perfecta.
+    Es el proceso completo — cuerpo, mente, negocio — y tener las herramientas para no hacerlo sola."
+  </blockquote>
+  <cite>— Fundadores de Metamorfosis™</cite>
+</section>
+
+<!-- CTA BOTTOM -->
+<section class="cta-section">
+  <h2>Tu lugar te espera.</h2>
+  <p>La primera ola de acceso abre pronto. Entra ahora.</p>
+  <button class="waitlist-btn" style="max-width:320px;margin:0 auto !important;display:block;" onclick="document.getElementById('waitlist-form').scrollIntoView({behavior:'smooth'})">
+    Solicitar acceso ↑
+  </button>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">METAMORFOSIS<span>™</span></div>
+  <div class="footer-links">
+    <a href="#" class="footer-link">Privacidad</a>
+    <a href="#" class="footer-link">Términos</a>
+    <a href="metamorfosis_app_2.html" class="footer-link">App →</a>
+  </div>
+  <div class="footer-copy">© 2026 Metamorfosis™ · Hecho en LATAM</div>
+</footer>
+
+<script>
+  lucide.createIcons();
+
+  // Scrolled nav
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 50);
+  });
+
+  // Tab switching
+  function switchTab(tab) {
+    document.getElementById('tab-waitlist').classList.toggle('active', tab === 'waitlist');
+    document.getElementById('tab-invite').classList.toggle('active', tab === 'invite');
+    document.getElementById('panel-waitlist').style.display = tab === 'waitlist' ? 'block' : 'none';
+    document.getElementById('panel-invite').style.display = tab === 'invite' ? 'block' : 'none';
+    document.getElementById('success-state').style.display = 'none';
+  }
+
+  function submitWaitlist() {
+    const name = document.getElementById('name-input').value.trim();
+    const email = document.getElementById('email-input').value.trim();
+    if (!name || !email) { alert('Por favor ingresa tu nombre y email.'); return; }
+    const code = 'MORF-' + Math.floor(1000 + Math.random() * 9000);
+    document.getElementById('referral-code').textContent = code;
+    document.getElementById('panel-waitlist').style.display = 'none';
+    document.getElementById('success-state').style.display = 'block';
+    lucide.createIcons();
+  }
+
+  function submitInvite() {
+    const code = document.getElementById('invite-code').value.trim().toUpperCase();
+    if (!code.startsWith('MORF-')) {
+      alert('Código inválido. Pide un código a una miembro de la comunidad.');
+      return;
+    }
+    window.location.href = 'metamorfosis_onboarding_1.html';
+  }
+</script>
+</body>
+</html>

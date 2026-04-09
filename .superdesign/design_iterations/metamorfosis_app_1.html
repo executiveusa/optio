@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Metamorfosis™ — App</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;700&family=DM+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style>
+    :root {
+      --bg:           #0c0d0a;
+      --bg-2:         #111410;
+      --bg-3:         #181c14;
+      --bg-4:         #1e2318;
+      --bg-5:         #252c1e;
+      --gold:         #c4963c;
+      --gold-light:   #ddb85a;
+      --gold-pale:    #f0d898;
+      --gold-dim:     rgba(196,150,60,0.4);
+      --gold-glow:    rgba(196,150,60,0.1);
+      --gold-border:  rgba(196,150,60,0.18);
+      --sage:         #5a7a52;
+      --sage-light:   #78a06a;
+      --sage-dim:     rgba(90,122,82,0.3);
+      --rust:         #b05c38;
+      --terracotta:   #c47a56;
+      --ink:          #e8e2d4;
+      --ink-dim:      #a09880;
+      --ink-muted:    #5a5448;
+      --font-display: 'Playfair Display', serif;
+      --font-body:    'DM Sans', sans-serif;
+      --font-mono:    'DM Mono', monospace;
+      --font-accent:  'Plus Jakarta Sans', sans-serif;
+      --ease:         cubic-bezier(0.16, 1, 0.3, 1);
+      --safe-bottom:  max(16px, env(safe-area-inset-bottom));
+    }
+
+    *, *::before, *::after { box-sizing: border-box !important; margin: 0 !important; padding: 0 !important; }
+    html, body { height: 100% !important; overflow: hidden !important; }
+    body {
+      font-family: var(--font-body) !important;
+      background: var(--bg) !important;
+      color: var(--ink) !important;
+      -webkit-font-smoothing: antialiased !important;
+    }
+
+    /* ── APP SHELL ── */
+    .app {
+      display: flex; flex-direction: column;
+      height: 100vh; height: 100dvh;
+      max-width: 480px; margin: 0 auto !important;
+      position: relative;
+      border-left: 1px solid var(--gold-border);
+      border-right: 1px solid var(--gold-border);
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px !important;
+      background: var(--bg);
+      border-bottom: 1px solid var(--gold-border);
+      flex-shrink: 0;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--sage));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .topbar-info h1 {
+      font-family: var(--font-accent) !important;
+      font-size: 16px !important; font-weight: 600 !important;
+      color: var(--ink) !important;
+    }
+    .topbar-info span {
+      font-size: 11px; color: var(--sage-light);
+    }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; }
+    .topbar-btn {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--bg-3) !important; border: 1px solid var(--gold-border) !important;
+      color: var(--ink-dim) !important; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 150ms var(--ease);
+    }
+    .topbar-btn:hover { color: var(--gold) !important; border-color: var(--gold-dim) !important; }
+    .topbar-btn.agent-active {
+      background: rgba(90,122,82,0.15) !important;
+      border-color: rgba(90,122,82,0.3) !important;
+      color: var(--sage-light) !important;
+    }
+
+    /* ── SCREEN CONTAINER ── */
+    .screen-container {
+      flex: 1; overflow: hidden; position: relative;
+    }
+    .screen {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      opacity: 0; pointer-events: none;
+      transition: opacity 250ms var(--ease);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .screen.active { opacity: 1; pointer-events: auto; }
+
+    /* ── CHAT SCREEN ── */
+    .chat-messages {
+      flex: 1; overflow-y: auto;
+      padding: 16px !important;
+      display: flex; flex-direction: column; gap: 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .msg {
+      max-width: 85%; padding: 12px 16px !important;
+      border-radius: 16px; font-size: 14px !important;
+      line-height: 1.5 !important; word-break: break-word;
+    }
+    .msg.ai {
+      align-self: flex-start;
+      background: var(--bg-3); color: var(--ink);
+      border: 1px solid var(--gold-border);
+      border-bottom-left-radius: 4px;
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: var(--gold); color: var(--bg);
+      border-bottom-right-radius: 4px;
+      font-weight: 500 !important;
+    }
+    .msg.system {
+      align-self: center;
+      background: none; color: var(--ink-muted);
+      font-size: 12px !important; text-align: center;
+      padding: 4px 12px !important;
+    }
+    .msg-media {
+      border-radius: 12px; overflow: hidden;
+      margin-top: 8px !important;
+      border: 1px solid var(--gold-border);
+    }
+    .msg-media img {
+      width: 100%; display: block;
+    }
+    .msg-actions {
+      display: flex; gap: 8px; margin-top: 8px !important;
+    }
+    .msg-action-btn {
+      padding: 4px 10px !important;
+      border-radius: 6px;
+      background: rgba(196,150,60,0.1) !important;
+      border: 1px solid var(--gold-border) !important;
+      color: var(--gold) !important;
+      font-family: var(--font-mono) !important;
+      font-size: 9px !important; letter-spacing: 1px !important;
+      text-transform: uppercase !important;
+      cursor: pointer;
+    }
+    .typing-indicator {
+      display: inline-flex; gap: 4px; align-items: center;
+      padding: 12px 16px !important;
+      background: var(--bg-3);
+      border: 1px solid var(--gold-border);
+      border-radius: 16px; border-bottom-left-radius: 4px;
+      align-self: flex-start;
+    }
+    .typing-indicator span {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold-dim);
+      animation: typeDot 1.4s ease-in-out infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typeDot {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* ── CHAT INPUT ── */
+    .chat-input-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px !important;
+      background: var(--bg-2);
+      border-top: 1px solid var(--gold-border);
+      flex-shrink: 0;
+    }
+    .chat-text-input {
+      flex: 1; padding: 10px 16px !important;
+      background: var(--bg) !important;
+      border: 1px solid var(--gold-border) !important;
+      border-radius: 999px;
+      color: var(--ink) !important;
+      font-family: var(--font-body) !important;
+      font-size: 14px !important;
+      outline: none !important;
+      transition: border-color 150ms var(--ease);
+    }
+    .chat-text-input::placeholder { color: var(--ink-muted) !important; }
+    .chat-text-input:focus { border-color: var(--gold-dim) !important; }
+    .input-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: none !important; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 150ms var(--ease);
+      flex-shrink: 0;
+    }
+    .voice-btn {
+      background: var(--bg-4) !important;
+      color: var(--gold) !important;
+    }
+    .voice-btn:hover { background: var(--bg-5) !important; }
+    .voice-btn.recording {
+      background: var(--rust) !important;
+      color: #fff !important;
+      animation: voicePulse 1.5s ease-in-out infinite;
+    }
+    .send-btn {
+      background: var(--gold) !important;
+      color: var(--bg) !important;
+    }
+    .send-btn:hover { background: var(--gold-light) !important; }
+    @keyframes voicePulse {
+      0%, 100% { box-shadow: 0 0 0 0px rgba(176,92,56,0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(176,92,56,0); }
+    }
+
+    /* ── MEAL PLAN SCREEN ── */
+    .meal-screen { padding: 16px !important; }
+    .meal-day {
+      margin-bottom: 20px !important;
+    }
+    .meal-day-header {
+      font-family: var(--font-accent) !important;
+      font-size: 14px !important; font-weight: 600 !important;
+      color: var(--ink) !important;
+      margin-bottom: 8px !important;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .meal-day-badge {
+      font-family: var(--font-mono) !important;
+      font-size: 9px !important; letter-spacing: 1px !important;
+      text-transform: uppercase !important;
+      padding: 2px 8px !important; border-radius: 4px;
+      background: var(--gold-glow); color: var(--gold);
+      border: 1px solid var(--gold-border);
+    }
+    .meal-card {
+      padding: 14px !important; border-radius: 12px;
+      background: var(--bg-2); border: 1px solid var(--gold-border);
+      margin-bottom: 8px !important;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .meal-card-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--gold-glow); border: 1px solid var(--gold-border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold); flex-shrink: 0;
+    }
+    .meal-card-info h4 {
+      font-family: var(--font-accent) !important;
+      font-size: 14px !important; font-weight: 500 !important;
+      color: var(--ink) !important;
+    }
+    .meal-card-info p {
+      font-size: 12px !important; color: var(--ink-dim) !important;
+      margin-top: 2px !important;
+    }
+    .meal-macros {
+      display: flex; gap: 12px; margin-top: 6px !important;
+    }
+    .meal-macro {
+      font-family: var(--font-mono) !important;
+      font-size: 9px !important; letter-spacing: 1px !important;
+      color: var(--ink-muted);
+    }
+    .meal-macro strong { color: var(--ink-dim); }
+
+    /* ── PROGRESS SCREEN ── */
+    .progress-screen { padding: 16px !important; }
+    .progress-stat {
+      padding: 20px !important; border-radius: 12px;
+      background: var(--bg-2); border: 1px solid var(--gold-border);
+      margin-bottom: 12px !important;
+    }
+    .progress-stat-label {
+      font-family: var(--font-mono) !important;
+      font-size: 9px !important; letter-spacing: 1.5px !important;
+      text-transform: uppercase !important;
+      color: var(--ink-muted) !important;
+      margin-bottom: 4px !important;
+    }
+    .progress-stat-value {
+      font-family: var(--font-display) !important;
+      font-size: 32px !important; font-weight: 700 !important;
+      color: var(--ink) !important;
+    }
+    .progress-stat-change {
+      font-size: 12px; color: var(--sage-light);
+      display: flex; align-items: center; gap: 4px;
+      margin-top: 4px !important;
+    }
+    .progress-chart {
+      height: 140px; border-radius: 12px;
+      background: var(--bg-2); border: 1px solid var(--gold-border);
+      margin: 16px 0 !important; padding: 16px !important;
+      display: flex; align-items: flex-end; gap: 4px;
+    }
+    .chart-bar {
+      flex: 1; border-radius: 4px 4px 0 0;
+      background: var(--gold-dim);
+      transition: height 400ms var(--ease);
+      min-height: 4px;
+    }
+    .chart-bar.current { background: var(--gold); }
+    .progress-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+
+    /* ── BRAIN SCREEN ── */
+    .brain-screen { padding: 16px !important; }
+    .brain-section-title {
+      font-family: var(--font-mono) !important;
+      font-size: 10px !important; letter-spacing: 1.5px !important;
+      text-transform: uppercase !important;
+      color: var(--ink-muted) !important;
+      margin: 20px 0 12px !important;
+    }
+    .brain-card {
+      padding: 14px !important; border-radius: 12px;
+      background: var(--bg-2); border: 1px solid var(--gold-border);
+      margin-bottom: 8px !important;
+      cursor: pointer;
+      transition: all 150ms var(--ease);
+    }
+    .brain-card:hover { border-color: var(--gold-dim); }
+    .brain-card-title {
+      font-family: var(--font-accent) !important;
+      font-size: 14px !important; font-weight: 500 !important;
+      color: var(--ink) !important;
+    }
+    .brain-card-desc {
+      font-size: 12px !important; color: var(--ink-dim) !important;
+      margin-top: 4px !important;
+    }
+    .brain-card-meta {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 8px !important;
+    }
+    .brain-tag {
+      font-family: var(--font-mono) !important;
+      font-size: 8px !important; letter-spacing: 1px !important;
+      text-transform: uppercase !important;
+      padding: 2px 6px !important; border-radius: 4px;
+      background: var(--sage-dim); color: var(--sage-light);
+    }
+
+    /* ── SETTINGS SCREEN ── */
+    .settings-screen { padding: 16px !important; }
+    .settings-group {
+      margin-bottom: 24px !important;
+    }
+    .settings-group-title {
+      font-family: var(--font-mono) !important;
+      font-size: 10px !important; letter-spacing: 1.5px !important;
+      text-transform: uppercase !important;
+      color: var(--ink-muted) !important;
+      margin-bottom: 8px !important;
+    }
+    .settings-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px !important; border-radius: 12px;
+      background: var(--bg-2); border: 1px solid var(--gold-border);
+      margin-bottom: 4px !important;
+    }
+    .settings-item-left {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .settings-item-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--gold-glow); border: 1px solid var(--gold-border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold);
+    }
+    .settings-item-label {
+      font-size: 14px !important; color: var(--ink) !important;
+      font-weight: 500 !important;
+    }
+    .settings-item-desc {
+      font-size: 11px !important; color: var(--ink-muted) !important;
+    }
+    .toggle-switch {
+      width: 44px; height: 24px; border-radius: 12px;
+      background: var(--bg-4);
+      border: 1px solid var(--gold-border);
+      position: relative; cursor: pointer;
+      transition: background 200ms var(--ease);
+    }
+    .toggle-switch.on { background: var(--gold); border-color: var(--gold); }
+    .toggle-knob {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--ink);
+      position: absolute; top: 2px; left: 2px;
+      transition: transform 200ms var(--ease);
+    }
+    .toggle-switch.on .toggle-knob { transform: translateX(20px); background: var(--bg); }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      display: flex; justify-content: space-around; align-items: center;
+      padding: 8px 0 var(--safe-bottom) !important;
+      background: var(--bg);
+      border-top: 1px solid var(--gold-border);
+      flex-shrink: 0;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      background: none !important; border: none !important;
+      color: var(--ink-muted) !important; cursor: pointer;
+      padding: 6px 16px !important;
+      transition: color 150ms var(--ease);
+      position: relative;
+    }
+    .nav-item.active { color: var(--gold) !important; }
+    .nav-item.active::after {
+      content: ''; position: absolute; top: -8px;
+      width: 16px; height: 2px; border-radius: 1px;
+      background: var(--gold);
+    }
+    .nav-item span {
+      font-family: var(--font-mono) !important;
+      font-size: 8px !important; letter-spacing: 1px !important;
+      text-transform: uppercase !important;
+    }
+
+    /* ── AGENT BROWSER PANEL ── */
+    .agent-panel {
+      position: absolute; inset: 0;
+      background: var(--bg);
+      z-index: 50;
+      display: none; flex-direction: column;
+    }
+    .agent-panel.visible { display: flex; }
+    .agent-panel-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px !important;
+      border-bottom: 1px solid var(--gold-border);
+      background: var(--bg-2);
+    }
+    .agent-url-bar {
+      flex: 1; padding: 6px 12px !important;
+      border-radius: 6px;
+      background: var(--bg) !important;
+      border: 1px solid var(--gold-border) !important;
+      color: var(--ink-dim) !important;
+      font-family: var(--font-mono) !important;
+      font-size: 11px !important;
+    }
+    .agent-panel-body {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      color: var(--ink-muted); font-size: 13px;
+      text-align: center; padding: 24px !important;
+    }
+    .agent-status {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 10px !important; border-radius: 6px;
+      background: rgba(90,122,82,0.15);
+      border: 1px solid rgba(90,122,82,0.3);
+    }
+    .agent-status .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--sage-light);
+      animation: agentPulse 2s ease-in-out infinite;
+    }
+    .agent-status span {
+      font-family: var(--font-mono) !important;
+      font-size: 9px !important; letter-spacing: 1px !important;
+      text-transform: uppercase !important;
+      color: var(--sage-light) !important;
+    }
+    @keyframes agentPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── SCREEN HEADER ── */
+    .screen-header {
+      padding: 16px !important;
+      border-bottom: 1px solid var(--gold-border);
+      background: var(--bg-2);
+    }
+    .screen-header h2 {
+      font-family: var(--font-display) !important;
+      font-size: 24px !important; font-weight: 700 !important;
+      color: var(--ink) !important;
+    }
+    .screen-header p {
+      font-size: 13px !important; color: var(--ink-dim) !important;
+      margin-top: 4px !important;
+    }
+
+    /* ── INTEL ITEMS ON BRAIN SCREEN ── */
+    .intel-brief {
+      padding: 14px !important; border-radius: 12px;
+      background: var(--bg-2); border: 1px solid var(--gold-border);
+      margin-bottom: 8px !important;
+    }
+    .intel-brief-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 6px !important;
+    }
+    .intel-brief-tag {
+      font-family: var(--font-mono) !important;
+      font-size: 8px !important; letter-spacing: 1px !important;
+      text-transform: uppercase !important;
+      padding: 2px 6px !important; border-radius: 4px;
+      background: rgba(196,150,60,0.12); color: var(--gold);
+    }
+    .intel-brief-time {
+      font-family: var(--font-mono) !important;
+      font-size: 9px !important; color: var(--ink-muted) !important;
+    }
+    .intel-brief-title {
+      font-size: 14px !important; font-weight: 500 !important;
+      color: var(--ink) !important;
+    }
+    .intel-brief-summary {
+      font-size: 12px !important; color: var(--ink-dim) !important;
+      margin-top: 4px !important; line-height: 1.5 !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ── TOP BAR ── -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-avatar">🦋</div>
+      <div class="topbar-info">
+        <h1 id="screenTitle">Metamorfosis</h1>
+        <span>● En línea</span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" id="agentToggle" title="Modo Agente">
+        <i data-lucide="bot" style="width:18px;height:18px;"></i>
+      </button>
+      <button class="topbar-btn" id="browserToggle" title="Navegador">
+        <i data-lucide="globe" style="width:18px;height:18px;"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── SCREEN CONTAINER ── -->
+  <div class="screen-container">
+
+    <!-- CHAT SCREEN -->
+    <div class="screen active" id="screen-chat">
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg system">Hoy · Encriptación activa 🔒</div>
+        <div class="msg ai">
+          ¡Buenos días! ☀️ Soy tu guía de bienestar Metamorfosis. 
+          ¿Cómo te sientes hoy? Puedo ayudarte con:
+          <div class="msg-actions">
+            <button class="msg-action-btn" onclick="quickAction('Plan de comida')">🍽️ Comida</button>
+            <button class="msg-action-btn" onclick="quickAction('Meditación')">🧘 Meditar</button>
+            <button class="msg-action-btn" onclick="quickAction('Mi progreso')">📊 Progreso</button>
+          </div>
+        </div>
+        <div class="msg user">Buenos días! Necesito ideas para el desayuno</div>
+        <div class="msg ai">
+          ¡Perfecto! Basándome en tu plan y preferencias vegetarianas, aquí tienes 3 opciones:
+
+          <strong>1. Avena tropical 🥥</strong><br>
+          Avena con leche de coco, mango y semillas de chía<br>
+          <em style="color:var(--ink-muted);font-size:12px;">320 cal · 12g proteína · 15 min</em>
+
+          <strong style="display:block;margin-top:8px;">2. Tostadas de aguacate 🥑</strong><br>
+          Pan integral, aguacate, huevo pochado, salsa verde<br>
+          <em style="color:var(--ink-muted);font-size:12px;">380 cal · 18g proteína · 10 min</em>
+
+          <strong style="display:block;margin-top:8px;">3. Smoothie verde ✨</strong><br>
+          Espinaca, plátano, proteína, leche de almendra<br>
+          <em style="color:var(--ink-muted);font-size:12px;">280 cal · 22g proteína · 5 min</em>
+
+          <div class="msg-actions">
+            <button class="msg-action-btn" onclick="quickAction('Dame la receta del smoothie')">Ver Receta</button>
+            <button class="msg-action-btn" onclick="quickAction('Genera imagen')">📸 Imagen</button>
+          </div>
+        </div>
+        <div class="msg ai">
+          <div class="msg-media">
+            <img src="https://images.unsplash.com/photo-1638176066666-ffb2f013c7dd?w=400&q=80" alt="Green smoothie bowl" loading="lazy">
+          </div>
+          Tu smoothie verde listo para inspirarte 🌿
+        </div>
+      </div>
+      <div class="chat-input-bar">
+        <button class="input-btn voice-btn" id="voiceBtn">
+          <i data-lucide="mic" style="width:18px;height:18px;"></i>
+        </button>
+        <input class="chat-text-input" type="text" placeholder="Escribe o habla..." id="chatInput">
+        <button class="input-btn send-btn" id="sendBtn">
+          <i data-lucide="send" style="width:18px;height:18px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- MEAL PLAN SCREEN -->
+    <div class="screen" id="screen-meals">
+      <div class="screen-header">
+        <h2>Plan de Comida</h2>
+        <p>Semana del 7 al 13 de Abril</p>
+      </div>
+      <div class="meal-screen">
+        <div class="meal-day">
+          <div class="meal-day-header">
+            <span>Lunes</span>
+            <span class="meal-day-badge">Hoy</span>
+          </div>
+          <div class="meal-card">
+            <div class="meal-card-icon"><i data-lucide="sunrise" style="width:16px;height:16px;"></i></div>
+            <div class="meal-card-info">
+              <h4>Avena con mango y chía</h4>
+              <p>Leche de coco, miel de agave</p>
+              <div class="meal-macros">
+                <span class="meal-macro"><strong>320</strong> cal</span>
+                <span class="meal-macro"><strong>12g</strong> prot</span>
+                <span class="meal-macro"><strong>45g</strong> carb</span>
+              </div>
+            </div>
+          </div>
+          <div class="meal-card">
+            <div class="meal-card-icon"><i data-lucide="sun" style="width:16px;height:16px;"></i></div>
+            <div class="meal-card-info">
+              <h4>Ensalada de lentejas con nopales</h4>
+              <p>Limón, cilantro, aguacate, chile serrano</p>
+              <div class="meal-macros">
+                <span class="meal-macro"><strong>420</strong> cal</span>
+                <span class="meal-macro"><strong>24g</strong> prot</span>
+                <span class="meal-macro"><strong>52g</strong> carb</span>
+              </div>
+            </div>
+          </div>
+          <div class="meal-card">
+            <div class="meal-card-icon"><i data-lucide="moon" style="width:16px;height:16px;"></i></div>
+            <div class="meal-card-info">
+              <h4>Tacos de coliflor al pastor</h4>
+              <p>Piña, cebolla, salsa verde, tortillas de maíz</p>
+              <div class="meal-macros">
+                <span class="meal-macro"><strong>380</strong> cal</span>
+                <span class="meal-macro"><strong>14g</strong> prot</span>
+                <span class="meal-macro"><strong>48g</strong> carb</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="meal-day">
+          <div class="meal-day-header"><span>Martes</span></div>
+          <div class="meal-card">
+            <div class="meal-card-icon"><i data-lucide="sunrise" style="width:16px;height:16px;"></i></div>
+            <div class="meal-card-info">
+              <h4>Smoothie verde proteico</h4>
+              <p>Espinaca, plátano, proteína de hemp</p>
+              <div class="meal-macros">
+                <span class="meal-macro"><strong>280</strong> cal</span>
+                <span class="meal-macro"><strong>22g</strong> prot</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRESS SCREEN -->
+    <div class="screen" id="screen-progress">
+      <div class="screen-header">
+        <h2>Tu Progreso</h2>
+        <p>Últimas 4 semanas</p>
+      </div>
+      <div class="progress-screen">
+        <div class="progress-row">
+          <div class="progress-stat">
+            <div class="progress-stat-label">Peso Actual</div>
+            <div class="progress-stat-value">62.5 kg</div>
+            <div class="progress-stat-change">
+              <i data-lucide="trending-down" style="width:14px;height:14px;"></i>
+              -1.2 kg este mes
+            </div>
+          </div>
+          <div class="progress-stat">
+            <div class="progress-stat-label">Racha</div>
+            <div class="progress-stat-value">14 días</div>
+            <div class="progress-stat-change">
+              <i data-lucide="flame" style="width:14px;height:14px;color:var(--rust);"></i>
+              Tu mejor racha
+            </div>
+          </div>
+        </div>
+        <div class="progress-chart" id="progressChart">
+          <div class="chart-bar" style="height:70%"></div>
+          <div class="chart-bar" style="height:65%"></div>
+          <div class="chart-bar" style="height:68%"></div>
+          <div class="chart-bar" style="height:60%"></div>
+          <div class="chart-bar" style="height:62%"></div>
+          <div class="chart-bar" style="height:55%"></div>
+          <div class="chart-bar" style="height:58%"></div>
+          <div class="chart-bar" style="height:52%"></div>
+          <div class="chart-bar" style="height:54%"></div>
+          <div class="chart-bar" style="height:50%"></div>
+          <div class="chart-bar" style="height:48%"></div>
+          <div class="chart-bar" style="height:52%"></div>
+          <div class="chart-bar" style="height:45%"></div>
+          <div class="chart-bar current" style="height:42%"></div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-stat">
+            <div class="progress-stat-label">Calorías Hoy</div>
+            <div class="progress-stat-value">1,120</div>
+            <div class="progress-stat-change">de 1,800 meta</div>
+          </div>
+          <div class="progress-stat">
+            <div class="progress-stat-label">Proteína</div>
+            <div class="progress-stat-value">48g</div>
+            <div class="progress-stat-change">de 80g meta</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BRAIN/INTEL SCREEN -->
+    <div class="screen" id="screen-brain">
+      <div class="screen-header">
+        <h2>Mi Cerebro</h2>
+        <p>Notas, inteligencia y segundo cerebro</p>
+      </div>
+      <div class="brain-screen">
+        <div class="brain-section-title">Briefings de Hoy</div>
+        <div class="intel-brief">
+          <div class="intel-brief-header">
+            <span class="intel-brief-tag">Nutrición</span>
+            <span class="intel-brief-time">7:00 AM</span>
+          </div>
+          <div class="intel-brief-title">Ayuno intermitente: nuevo estudio para mujeres</div>
+          <div class="intel-brief-summary">Investigadores de UNAM revelan beneficios específicos para mujeres en edad reproductiva.</div>
+        </div>
+        <div class="intel-brief">
+          <div class="intel-brief-header">
+            <span class="intel-brief-tag" style="background:rgba(90,122,82,0.12);color:var(--sage-light);">Bienestar</span>
+            <span class="intel-brief-time">7:00 AM</span>
+          </div>
+          <div class="intel-brief-title">Respiración 4-7-8 para emprendedoras</div>
+          <div class="intel-brief-summary">Reduce cortisol en 3 minutos entre reuniones.</div>
+        </div>
+        
+        <div class="brain-section-title">Mis Notas</div>
+        <div class="brain-card">
+          <div class="brain-card-title">Lista de compras de la semana</div>
+          <div class="brain-card-desc">Aguacate, nopal, lentejas, tomate, chile serrano...</div>
+          <div class="brain-card-meta">
+            <span class="brain-tag">Compras</span>
+            <span class="brain-tag" style="background:var(--gold-glow);color:var(--gold);">Auto-generada</span>
+          </div>
+        </div>
+        <div class="brain-card">
+          <div class="brain-card-title">Reflexión del lunes</div>
+          <div class="brain-card-desc">Me siento más enfocada después de la meditación matutina...</div>
+          <div class="brain-card-meta">
+            <span class="brain-tag">Diario</span>
+          </div>
+        </div>
+        <div class="brain-card">
+          <div class="brain-card-title">Ideas para el negocio</div>
+          <div class="brain-card-desc">Explorar talleres de bienestar para emprendedoras...</div>
+          <div class="brain-card-meta">
+            <span class="brain-tag" style="background:rgba(176,92,56,0.15);color:var(--terracotta);">Negocio</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS SCREEN -->
+    <div class="screen" id="screen-settings">
+      <div class="screen-header">
+        <h2>Ajustes</h2>
+        <p>Personaliza tu experiencia</p>
+      </div>
+      <div class="settings-screen">
+        <div class="settings-group">
+          <div class="settings-group-title">Privacidad & Seguridad</div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon"><i data-lucide="key" style="width:16px;height:16px;"></i></div>
+              <div>
+                <div class="settings-item-label">BYOK — Mi API Key</div>
+                <div class="settings-item-desc">Usa tu propia clave de ChatGPT</div>
+              </div>
+            </div>
+            <i data-lucide="chevron-right" style="width:16px;height:16px;color:var(--ink-muted);"></i>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon"><i data-lucide="shield" style="width:16px;height:16px;"></i></div>
+              <div>
+                <div class="settings-item-label">Encriptación</div>
+                <div class="settings-item-desc">Encriptación end-to-end activa</div>
+              </div>
+            </div>
+            <div class="toggle-switch on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-title">Inteligencia Global</div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon" style="background:rgba(90,122,82,0.1);border-color:rgba(90,122,82,0.2);color:var(--sage);"><i data-lucide="newspaper" style="width:16px;height:16px;"></i></div>
+              <div>
+                <div class="settings-item-label">Briefings Diarios</div>
+                <div class="settings-item-desc">Reportes automáticos a las 7:00 AM</div>
+              </div>
+            </div>
+            <div class="toggle-switch on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon" style="background:rgba(90,122,82,0.1);border-color:rgba(90,122,82,0.2);color:var(--sage);"><i data-lucide="bell" style="width:16px;height:16px;"></i></div>
+              <div>
+                <div class="settings-item-label">Notificaciones</div>
+                <div class="settings-item-desc">Alertas de progreso y recordatorios</div>
+              </div>
+            </div>
+            <div class="toggle-switch" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-title">Agente</div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon" style="background:rgba(176,92,56,0.1);border-color:rgba(176,92,56,0.2);color:var(--rust);"><i data-lucide="bot" style="width:16px;height:16px;"></i></div>
+              <div>
+                <div class="settings-item-label">Modo Agente</div>
+                <div class="settings-item-desc">Permitir navegación web autónoma</div>
+              </div>
+            </div>
+            <div class="toggle-switch on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon" style="background:rgba(176,92,56,0.1);border-color:rgba(176,92,56,0.2);color:var(--rust);"><i data-lucide="terminal" style="width:16px;height:16px;"></i></div>
+              <div>
+                <div class="settings-item-label">Motor Rust</div>
+                <div class="settings-item-desc">Procesamiento local de datos</div>
+              </div>
+            </div>
+            <i data-lucide="chevron-right" style="width:16px;height:16px;color:var(--ink-muted);"></i>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-title">Cuenta</div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon"><i data-lucide="user" style="width:16px;height:16px;"></i></div>
+              <div>
+                <div class="settings-item-label">Perfil</div>
+                <div class="settings-item-desc">Nombre, metas, preferencias</div>
+              </div>
+            </div>
+            <i data-lucide="chevron-right" style="width:16px;height:16px;color:var(--ink-muted);"></i>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-left">
+              <div class="settings-item-icon"><i data-lucide="languages" style="width:16px;height:16px;"></i></div>
+              <div>
+                <div class="settings-item-label">Idioma</div>
+                <div class="settings-item-desc">Español (México)</div>
+              </div>
+            </div>
+            <i data-lucide="chevron-right" style="width:16px;height:16px;color:var(--ink-muted);"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGENT BROWSER PANEL -->
+    <div class="agent-panel" id="agentPanel">
+      <div class="agent-panel-header">
+        <button class="topbar-btn" onclick="toggleAgentPanel()" title="Cerrar">
+          <i data-lucide="x" style="width:16px;height:16px;"></i>
+        </button>
+        <input class="agent-url-bar" type="text" value="buscando: mejores precios aguacate CDMX" readonly>
+        <div class="agent-status">
+          <span class="dot"></span>
+          <span>Agente</span>
+        </div>
+      </div>
+      <div class="agent-panel-body">
+        <div>
+          <i data-lucide="search" style="width:32px;height:32px;color:var(--gold-dim);margin-bottom:12px;display:block;margin:0 auto 12px;"></i>
+          <p style="color:var(--ink-dim);">Tu agente está navegando la web</p>
+          <p style="color:var(--ink-muted);font-size:12px;margin-top:4px;">Buscando mejores precios de ingredientes para tu plan semanal...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── BOTTOM NAV ── -->
+  <div class="bottom-nav">
+    <button class="nav-item active" data-screen="chat">
+      <i data-lucide="message-circle" style="width:20px;height:20px;"></i>
+      <span>Chat</span>
+    </button>
+    <button class="nav-item" data-screen="meals">
+      <i data-lucide="utensils" style="width:20px;height:20px;"></i>
+      <span>Comida</span>
+    </button>
+    <button class="nav-item" data-screen="progress">
+      <i data-lucide="trending-up" style="width:20px;height:20px;"></i>
+      <span>Progreso</span>
+    </button>
+    <button class="nav-item" data-screen="brain">
+      <i data-lucide="brain" style="width:20px;height:20px;"></i>
+      <span>Cerebro</span>
+    </button>
+    <button class="nav-item" data-screen="settings">
+      <i data-lucide="settings" style="width:20px;height:20px;"></i>
+      <span>Ajustes</span>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  // Init icons
+  lucide.createIcons();
+
+  // Screen navigation
+  const navItems = document.querySelectorAll('.nav-item');
+  const screens = document.querySelectorAll('.screen');
+  const screenTitle = document.getElementById('screenTitle');
+
+  const titles = {
+    chat: 'Metamorfosis',
+    meals: 'Plan de Comida',
+    progress: 'Tu Progreso',
+    brain: 'Mi Cerebro',
+    settings: 'Ajustes'
+  };
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const target = item.dataset.screen;
+      navItems.forEach(n => n.classList.remove('active'));
+      screens.forEach(s => s.classList.remove('active'));
+      item.classList.add('active');
+      document.getElementById('screen-' + target).classList.add('active');
+      screenTitle.textContent = titles[target] || 'Metamorfosis';
+    });
+  });
+
+  // Voice toggle
+  const voiceBtn = document.getElementById('voiceBtn');
+  let isRecording = false;
+  voiceBtn.addEventListener('click', () => {
+    isRecording = !isRecording;
+    voiceBtn.classList.toggle('recording', isRecording);
+  });
+
+  // Chat input
+  const chatInput = document.getElementById('chatInput');
+  const chatMessages = document.getElementById('chatMessages');
+
+  function sendMessage(text) {
+    if (!text.trim()) return;
+    
+    const userMsg = document.createElement('div');
+    userMsg.className = 'msg user';
+    userMsg.textContent = text;
+    chatMessages.appendChild(userMsg);
+    
+    const typing = document.createElement('div');
+    typing.className = 'typing-indicator';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    chatMessages.appendChild(typing);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    setTimeout(() => {
+      typing.remove();
+      const aiMsg = document.createElement('div');
+      aiMsg.className = 'msg ai';
+      const responses = [
+        '¡Entendido! Estoy procesando tu solicitud 🦋',
+        'Excelente pregunta. Déjame buscar la mejor opción para ti ✨',
+        'Ya tengo tu información. Preparando una recomendación personalizada...',
+        'Perfecto, analizando tus preferencias para darte la mejor respuesta.',
+        '¡Claro! Basándome en tu historial, esto es lo que recomiendo...',
+      ];
+      aiMsg.textContent = responses[Math.floor(Math.random() * responses.length)];
+      chatMessages.appendChild(aiMsg);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 1500);
+  }
+
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      sendMessage(chatInput.value);
+      chatInput.value = '';
+    }
+  });
+
+  document.getElementById('sendBtn').addEventListener('click', () => {
+    sendMessage(chatInput.value);
+    chatInput.value = '';
+  });
+
+  function quickAction(text) {
+    sendMessage(text);
+  }
+
+  // Agent panel
+  function toggleAgentPanel() {
+    document.getElementById('agentPanel').classList.toggle('visible');
+  }
+
+  document.getElementById('agentToggle').addEventListener('click', () => {
+    const btn = document.getElementById('agentToggle');
+    btn.classList.toggle('agent-active');
+  });
+
+  document.getElementById('browserToggle').addEventListener('click', toggleAgentPanel);
+</script>
+</body>
+</html>

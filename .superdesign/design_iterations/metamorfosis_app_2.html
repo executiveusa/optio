@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Metamorfosis™</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;700&family=DM+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --bg:#0c0d0a; --bg-2:#111410; --bg-3:#181c14; --bg-4:#1e2318; --bg-5:#252c1e;
+      --gold:#c4963c; --gold-light:#ddb85a; --gold-pale:#f0d898;
+      --gold-dim:rgba(196,150,60,0.35); --gold-glow:rgba(196,150,60,0.08);
+      --gold-border:rgba(196,150,60,0.18);
+      --sage:#5a7a52; --sage-light:#78a06a; --sage-dim:rgba(90,122,82,0.25);
+      --rust:#b05c38; --terracotta:#c47a56;
+      --ink:#e8e2d4; --ink-dim:#a09880; --ink-muted:#5a5448;
+      --premium:#8b5cf6; --premium-dim:rgba(139,92,246,0.15); --premium-border:rgba(139,92,246,0.25);
+      --font-d:'Playfair Display',serif; --font-b:'DM Sans',sans-serif;
+      --font-m:'DM Mono',monospace; --font-a:'Plus Jakarta Sans',sans-serif;
+      --ease:cubic-bezier(0.16,1,0.3,1);
+      --safe-b:max(16px,env(safe-area-inset-bottom));
+    }
+    *,*::before,*::after{box-sizing:border-box!important;margin:0!important;padding:0!important;}
+    html,body{height:100%!important;overflow:hidden!important;}
+    body{font-family:var(--font-b)!important;background:var(--bg)!important;color:var(--ink)!important;-webkit-font-smoothing:antialiased!important;}
+
+    /* ══ SHELL ══ */
+    .app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:430px;margin:0 auto!important;position:relative;border-left:1px solid var(--gold-border);border-right:1px solid var(--gold-border);}
+
+    /* ══ TOPBAR ══ */
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px!important;background:var(--bg);border-bottom:1px solid var(--gold-border);flex-shrink:0;gap:8px;}
+    .topbar-left{display:flex;align-items:center;gap:10px;}
+    .topbar-logo{font-family:var(--font-d)!important;font-size:15px!important;letter-spacing:1.5px!important;color:var(--ink)!important;}
+    .topbar-logo span{color:var(--gold);}
+    .tier-badge{font-family:var(--font-m)!important;font-size:8px!important;letter-spacing:1px!important;text-transform:uppercase!important;padding:2px 7px!important;border-radius:4px;}
+    .tier-free{background:var(--gold-glow);color:var(--gold);border:1px solid var(--gold-border);}
+    .tier-premium{background:var(--premium-dim);color:var(--premium);border:1px solid var(--premium-border);}
+    .topbar-right{display:flex;gap:8px;align-items:center;}
+    .topbar-btn{width:34px;height:34px;border-radius:8px;background:var(--bg-3)!important;border:1px solid var(--gold-border)!important;color:var(--ink-dim)!important;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 150ms var(--ease);}
+    .topbar-btn:hover{color:var(--gold)!important;border-color:var(--gold-dim)!important;}
+    .topbar-btn.active{background:var(--gold-glow)!important;border-color:var(--gold-dim)!important;color:var(--gold)!important;}
+
+    /* ══ SCREENS ══ */
+    .screen-wrap{flex:1;overflow:hidden;position:relative;}
+    .screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity 220ms var(--ease);overflow-y:auto;-webkit-overflow-scrolling:touch;}
+    .screen.active{opacity:1;pointer-events:auto;}
+
+    /* ══ SECTION HEADERS ══ */
+    .s-head{padding:16px!important;border-bottom:1px solid var(--gold-border);background:var(--bg-2);flex-shrink:0;}
+    .s-head h2{font-family:var(--font-d)!important;font-size:22px!important;font-weight:700!important;color:var(--ink)!important;}
+    .s-head p{font-size:12px!important;color:var(--ink-dim)!important;margin-top:3px!important;}
+    .s-content{padding:16px!important;flex:1;}
+
+    /* ══ CHAT ══ */
+    .chat-msgs{flex:1;overflow-y:auto;padding:14px!important;display:flex;flex-direction:column;gap:10px;}
+    .usage-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px!important;background:var(--bg-2);border-bottom:1px solid var(--gold-border);flex-shrink:0;}
+    .usage-label{font-family:var(--font-m)!important;font-size:9px!important;letter-spacing:1px!important;color:var(--ink-muted)!important;}
+    .usage-track{width:80px;height:3px;background:var(--bg-4);border-radius:2px;}
+    .usage-fill{height:100%;border-radius:2px;background:var(--gold);width:70%;}
+    .usage-upgrade{font-family:var(--font-m)!important;font-size:8px!important;letter-spacing:1px!important;text-transform:uppercase!important;color:var(--premium)!important;cursor:pointer;border:none!important;background:none!important;}
+    .msg{max-width:85%;padding:11px 15px!important;border-radius:14px;font-size:13px!important;line-height:1.5!important;word-break:break-word;}
+    .msg.ai{align-self:flex-start;background:var(--bg-3);color:var(--ink);border:1px solid var(--gold-border);border-bottom-left-radius:3px;}
+    .msg.user{align-self:flex-end;background:var(--gold);color:var(--bg);border-bottom-right-radius:3px;font-weight:500!important;}
+    .msg.sys{align-self:center;background:none;color:var(--ink-muted);font-size:11px!important;text-align:center;padding:4px 10px!important;}
+    .msg-actions{display:flex;gap:6px;margin-top:8px!important;flex-wrap:wrap;}
+    .msg-btn{padding:4px 10px!important;border-radius:5px;background:rgba(196,150,60,0.1)!important;border:1px solid var(--gold-border)!important;color:var(--gold)!important;font-family:var(--font-m)!important;font-size:8px!important;letter-spacing:1px!important;text-transform:uppercase!important;cursor:pointer;transition:all 100ms var(--ease);}
+    .msg-btn:hover{background:rgba(196,150,60,0.2)!important;}
+    .msg-media{border-radius:10px;overflow:hidden;margin-top:8px!important;border:1px solid var(--gold-border);}
+    .msg-media img{width:100%;display:block;}
+    .typing{display:inline-flex;gap:4px;align-items:center;padding:11px 15px!important;background:var(--bg-3);border:1px solid var(--gold-border);border-radius:14px;border-bottom-left-radius:3px;align-self:flex-start;}
+    .typing span{width:5px;height:5px;border-radius:50%;background:var(--gold-dim);animation:td 1.4s ease-in-out infinite;}
+    .typing span:nth-child(2){animation-delay:.2s;} .typing span:nth-child(3){animation-delay:.4s;}
+    @keyframes td{0%,60%,100%{transform:translateY(0);opacity:.4;}30%{transform:translateY(-5px);opacity:1;}}
+    .chat-input-bar{display:flex;align-items:center;gap:7px;padding:10px 14px!important;background:var(--bg-2);border-top:1px solid var(--gold-border);flex-shrink:0;}
+    .chat-input{flex:1;padding:9px 14px!important;background:var(--bg)!important;border:1px solid var(--gold-border)!important;border-radius:999px;color:var(--ink)!important;font-family:var(--font-b)!important;font-size:13px!important;outline:none!important;transition:border-color 150ms var(--ease);}
+    .chat-input::placeholder{color:var(--ink-muted)!important;}
+    .chat-input:focus{border-color:var(--gold-dim)!important;}
+    .c-btn{width:38px;height:38px;border-radius:50%;border:none!important;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 150ms var(--ease);flex-shrink:0;}
+    .v-btn{background:var(--bg-4)!important;color:var(--gold)!important;}
+    .v-btn.rec{background:var(--rust)!important;color:#fff!important;animation:vp 1.5s ease-in-out infinite;}
+    .s-btn{background:var(--gold)!important;color:var(--bg)!important;}
+    @keyframes vp{0%,100%{box-shadow:0 0 0 0 rgba(176,92,56,.4);}50%{box-shadow:0 0 0 8px rgba(176,92,56,0);}}
+
+    /* ══ JOURNAL ══ */
+    .journal-list{padding:16px!important;display:flex;flex-direction:column;gap:8px;}
+    .journal-entry{padding:14px!important;border-radius:10px;background:var(--bg-2);border:1px solid var(--gold-border);cursor:pointer;transition:all 150ms var(--ease);}
+    .journal-entry:hover{border-color:var(--gold-dim);}
+    .je-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px!important;}
+    .je-date{font-family:var(--font-m)!important;font-size:9px!important;letter-spacing:1px!important;color:var(--ink-muted)!important;}
+    .je-mood{font-size:16px;}
+    .je-title{font-family:var(--font-a)!important;font-size:14px!important;font-weight:500!important;color:var(--ink)!important;}
+    .je-preview{font-size:12px!important;color:var(--ink-dim)!important;margin-top:4px!important;line-height:1.5!important;}
+    .je-tags{display:flex;gap:6px;margin-top:8px!important;flex-wrap:wrap;}
+    .je-tag{font-family:var(--font-m)!important;font-size:8px!important;letter-spacing:1px!important;text-transform:uppercase!important;padding:2px 6px!important;border-radius:3px;background:var(--sage-dim);color:var(--sage-light);}
+    .je-ai-tag{background:var(--gold-glow);color:var(--gold);}
+    .journal-fab{position:absolute;bottom:80px;right:16px;z-index:20;}
+    .fab-btn{width:52px;height:52px;border-radius:50%;background:var(--gold)!important;border:none!important;color:var(--bg)!important;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(196,150,60,0.4);transition:all 200ms var(--ease);}
+    .fab-btn:hover{background:var(--gold-light)!important;transform:scale(1.05);}
+
+    /* Journal Write View */
+    .journal-write{position:absolute;inset:0;background:var(--bg);z-index:30;display:none;flex-direction:column;}
+    .journal-write.open{display:flex;}
+    .jw-header{display:flex;align-items:center;gap:12px;padding:14px 16px!important;border-bottom:1px solid var(--gold-border);background:var(--bg-2);flex-shrink:0;}
+    .jw-back{background:none!important;border:none!important;color:var(--ink-dim)!important;cursor:pointer;}
+    .jw-title-input{flex:1;background:none!important;border:none!important;color:var(--ink)!important;font-family:var(--font-a)!important;font-size:16px!important;font-weight:600!important;outline:none!important;}
+    .jw-save{padding:6px 14px!important;border-radius:6px;background:var(--gold)!important;border:none!important;color:var(--bg)!important;font-family:var(--font-m)!important;font-size:9px!important;letter-spacing:1px!important;text-transform:uppercase!important;cursor:pointer;}
+    .jw-mood-row{display:flex;gap:8px;padding:12px 16px!important;border-bottom:1px solid var(--gold-border);flex-shrink:0;}
+    .mood-btn{width:36px;height:36px;border-radius:8px;background:var(--bg-3)!important;border:1px solid var(--gold-border)!important;font-size:18px;cursor:pointer;transition:all 150ms var(--ease);display:flex;align-items:center;justify-content:center;}
+    .mood-btn.active{border-color:var(--gold)!important;background:var(--gold-glow)!important;}
+    .jw-body{flex:1;overflow-y:auto;}
+    .jw-editor{width:100%;flex:1;padding:16px!important;background:none!important;border:none!important;color:var(--ink)!important;font-family:var(--font-b)!important;font-size:15px!important;line-height:1.8!important;outline:none!important;resize:none!important;min-height:200px;}
+    .jw-editor::placeholder{color:var(--ink-muted)!important;}
+    .jw-ai-bar{padding:10px 16px!important;border-top:1px solid var(--gold-border);background:var(--bg-2);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+    .jw-ai-prompt{font-size:12px!important;color:var(--ink-dim)!important;font-style:italic;flex:1;}
+    .jw-ai-btn{padding:6px 12px!important;border-radius:6px;background:var(--gold-glow)!important;border:1px solid var(--gold-border)!important;color:var(--gold)!important;font-family:var(--font-m)!important;font-size:8px!important;letter-spacing:1px!important;text-transform:uppercase!important;cursor:pointer;white-space:nowrap;}
+    .ai-memory-row{padding:12px 16px!important;border-top:1px solid var(--gold-border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .ai-memory-label{font-size:12px!important;color:var(--ink-dim)!important;display:flex;align-items:center;gap:6px;}
+    .toggle{width:40px;height:22px;border-radius:11px;background:var(--bg-4);border:1px solid var(--gold-border);position:relative;cursor:pointer;transition:background 200ms var(--ease);}
+    .toggle.on{background:var(--gold);border-color:var(--gold);}
+    .toggle-k{width:16px;height:16px;border-radius:50%;background:var(--ink);position:absolute;top:2px;left:2px;transition:transform 200ms var(--ease);}
+    .toggle.on .toggle-k{transform:translateX(18px);background:var(--bg);}
+
+    /* ══ MEAL PLAN ══ */
+    .meal-list{padding:12px!important;}
+    .meal-day{margin-bottom:18px!important;}
+    .md-header{display:flex;align-items:center;gap:8px;margin-bottom:8px!important;}
+    .md-name{font-family:var(--font-a)!important;font-size:13px!important;font-weight:600!important;color:var(--ink)!important;}
+    .md-badge{font-family:var(--font-m)!important;font-size:8px!important;letter-spacing:1px!important;text-transform:uppercase!important;padding:2px 6px!important;border-radius:3px;background:var(--gold-glow);color:var(--gold);border:1px solid var(--gold-border);}
+    .meal-card{padding:12px!important;border-radius:10px;background:var(--bg-2);border:1px solid var(--gold-border);margin-bottom:6px!important;display:flex;align-items:flex-start;gap:10px;}
+    .mc-icon{width:34px;height:34px;border-radius:8px;background:var(--gold-glow);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0;}
+    .mc-info h4{font-family:var(--font-a)!important;font-size:13px!important;font-weight:500!important;color:var(--ink)!important;}
+    .mc-info p{font-size:11px!important;color:var(--ink-dim)!important;margin-top:2px!important;}
+    .mc-macros{display:flex;gap:10px;margin-top:5px!important;}
+    .mc-m{font-family:var(--font-m)!important;font-size:8px!important;letter-spacing:1px!important;color:var(--ink-muted)!important;}
+    .mc-m strong{color:var(--ink-dim);}
+    .regen-bar{padding:12px 16px!important;border-bottom:1px solid var(--gold-border);display:flex;gap:8px;flex-shrink:0;}
+    .regen-btn{padding:8px 16px!important;border-radius:7px;background:var(--gold)!important;border:none!important;color:var(--bg)!important;font-family:var(--font-m)!important;font-size:9px!important;letter-spacing:1px!important;text-transform:uppercase!important;cursor:pointer;display:flex;align-items:center;gap:6px;}
+    .regen-btn2{padding:8px 16px!important;border-radius:7px;background:var(--bg-3)!important;border:1px solid var(--gold-border)!important;color:var(--ink-dim)!important;font-family:var(--font-m)!important;font-size:9px!important;letter-spacing:1px!important;text-transform:uppercase!important;cursor:pointer;}
+
+    /* ══ PROGRESS ══ */
+    .prog-stats{padding:14px!important;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .stat-box{padding:18px!important;border-radius:10px;background:var(--bg-2);border:1px solid var(--gold-border);}
+    .stat-label{font-family:var(--font-m)!important;font-size:8px!important;letter-spacing:1.5px!important;text-transform:uppercase!important;color:var(--ink-muted)!important;margin-bottom:4px!important;}
+    .stat-val{font-family:var(--font-d)!important;font-size:28px!important;font-weight:700!important;color:var(--ink)!important;}
+    .stat-change{font-size:11px!important;color:var(--sage-light)!important;display:flex;align-items:center;gap:3px;margin-top:3px!important;}
+    .prog-chart{height:120px;margin:0 14px 14px!important;border-radius:10px;background:var(--bg-2);border:1px solid var(--gold-border);padding:12px!important;display:flex;align-items:flex-end;gap:4px;}
+    .bar{flex:1;border-radius:3px 3px 0 0;background:var(--gold-dim);min-height:3px;}
+    .bar.now{background:var(--gold);}
+
+    /* ══ BRAIN ══ */
+    .brain-tabs{display:flex;padding:12px 16px!important;gap:8px;border-bottom:1px solid var(--gold-border);flex-shrink:0;}
+    .brain-tab{padding:6px 14px!important;border-radius:6px;font-family:var(--font-m)!important;font-size:9px!important;letter-spacing:1px!important;text-transform:uppercase!important;cursor:pointer;border:1px solid transparent!important;background:none!important;color:var(--ink-muted)!important;transition:all 150ms var(--ease);}
+    .brain-tab.active{background:var(--bg-3)!important;border-color:var(--gold-border)!important;color:var(--ink)!important;}
+    .brain-panel{padding:14px!important;display:none;}
+    .brain-panel.active{display:block;}
+    .brain-card{padding:13px!important;border-radius:10px;background:var(--bg-2);border:1px solid var(--gold-border);margin-bottom:7px!important;cursor:pointer;transition:border-color 150ms var(--ease);}
+    .brain-card:hover{border-color:var(--gold-dim);}
+    .bc-title{font-family:var(--font-a)!important;font-size:13px!important;font-weight:500!important;color:var(--ink)!important;}
+    .bc-desc{font-size:11px!important;color:var(--ink-dim)!important;margin-top:3px!important;line-height:1.5!important;}
+    .bc-meta{display:flex;gap:6px;margin-top:7px!important;}
+    .b-tag{font-family:var(--font-m)!important;font-size:7px!important;letter-spacing:1px!important;text-transform:uppercase!important;padding:2px 5px!important;border-radius:3px;}
+    .bt-sage{background:var(--sage-dim);color:var(--sage-light);}
+    .bt-gold{background:var(--gold-glow);color:var(--gold);}
+    .bt-rust{background:rgba(176,92,56,0.12);color:var(--terracotta);}
+    .intel-brief{padding:12px!important;border-radius:10px;background:var(--bg-2);border:1px solid var(--gold-border);margin-bottom:7px!important;}
+    .ib-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px!important;}
+    .ib-tag{font-family:var(--font-m)!important;font-size:7px!important;letter-spacing:1px!important;text-transform:uppercase!important;padding:2px 5px!important;border-radius:3px;background:var(--gold-glow);color:var(--gold);}
+    .ib-time{font-family:var(--font-m)!important;font-size:8px!important;color:var(--ink-muted)!important;}
+    .ib-title{font-size:13px!important;font-weight:500!important;color:var(--ink)!important;}
+    .ib-summary{font-size:11px!important;color:var(--ink-dim)!important;margin-top:3px!important;line-height:1.5!important;}
+
+    /* ══ CONNECT (Composio-style) ══ */
+    .connect-intro{padding:16px!important;border-bottom:1px solid var(--gold-border);flex-shrink:0;}
+    .connect-intro p{font-size:13px!important;color:var(--ink-dim)!important;line-height:1.5!important;}
+    .connect-section{padding:14px 16px!important;}
+    .cs-title{font-family:var(--font-m)!important;font-size:10px!important;letter-spacing:1.5px!important;text-transform:uppercase!important;color:var(--ink-muted)!important;margin-bottom:10px!important;}
+    .integrations-grid{display:flex;flex-direction:column;gap:8px;}
+    .integration-row{display:flex;align-items:center;justify-content:space-between;padding:12px!important;border-radius:10px;background:var(--bg-2);border:1px solid var(--gold-border);transition:border-color 150ms var(--ease);}
+    .integration-row:hover{border-color:var(--gold-dim);}
+    .int-left{display:flex;align-items:center;gap:12px;}
+    .int-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+    .int-info h4{font-family:var(--font-a)!important;font-size:13px!important;font-weight:500!important;color:var(--ink)!important;}
+    .int-info p{font-size:11px!important;color:var(--ink-dim)!important;}
+    .int-status{font-family:var(--font-m)!important;font-size:8px!important;letter-spacing:1px!important;text-transform:uppercase!important;padding:4px 10px!important;border-radius:5px;cursor:pointer;border:none!important;transition:all 150ms var(--ease);}
+    .int-connected{background:rgba(90,122,82,0.15)!important;color:var(--sage-light)!important;border:1px solid rgba(90,122,82,0.25)!important;}
+    .int-connect{background:var(--gold-glow)!important;color:var(--gold)!important;border:1px solid var(--gold-border)!important;}
+    .int-premium{background:var(--premium-dim)!important;color:var(--premium)!important;border:1px solid var(--premium-border)!important;}
+    .int-connect:hover{background:var(--gold)!important;color:var(--bg)!important;}
+
+    /* ══ SETTINGS ══ */
+    .settings-wrap{padding:14px!important;}
+    .sg-title{font-family:var(--font-m)!important;font-size:9px!important;letter-spacing:1.5px!important;text-transform:uppercase!important;color:var(--ink-muted)!important;margin-bottom:8px!important;margin-top:16px!important;}
+    .sg-title:first-child{margin-top:0!important;}
+    .settings-item{display:flex;align-items:center;justify-content:space-between;padding:13px!important;border-radius:10px;background:var(--bg-2);border:1px solid var(--gold-border);margin-bottom:4px!important;cursor:pointer;transition:border-color 150ms var(--ease);}
+    .settings-item:hover{border-color:var(--gold-dim);}
+    .si-left{display:flex;align-items:center;gap:11px;}
+    .si-icon{width:30px;height:30px;border-radius:7px;background:var(--gold-glow);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;color:var(--gold);}
+    .si-label{font-size:13px!important;color:var(--ink)!important;font-weight:500!important;}
+    .si-desc{font-size:10px!important;color:var(--ink-muted)!important;}
+    .invite-block{padding:16px!important;border-radius:10px;background:linear-gradient(135deg,rgba(196,150,60,0.08),rgba(90,122,82,0.05));border:1px solid var(--gold-border);margin-top:16px!important;text-align:center;}
+    .invite-block h4{font-family:var(--font-d)!important;font-size:16px!important;font-weight:700!important;color:var(--ink)!important;margin-bottom:6px!important;}
+    .invite-block p{font-size:12px!important;color:var(--ink-dim)!important;margin-bottom:14px!important;}
+    .invite-code-box{font-family:var(--font-m)!important;font-size:18px!important;letter-spacing:3px!important;color:var(--gold)!important;padding:12px!important;border-radius:8px;background:var(--bg);border:1px solid var(--gold-border);margin-bottom:10px!important;}
+    .invite-share-btn{width:100%;padding:11px!important;border-radius:8px;background:var(--gold)!important;border:none!important;color:var(--bg)!important;font-family:var(--font-a)!important;font-size:13px!important;font-weight:600!important;cursor:pointer;}
+
+    /* ══ PAYWALL MODAL ══ */
+    .modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.8);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+    .modal-overlay.open{display:flex;}
+    .paywall{width:100%;background:var(--bg-2);border:1px solid var(--gold-border);border-radius:20px 20px 0 0;padding:28px 24px var(--safe-b) !important;}
+    .pw-handle{width:36px;height:3px;border-radius:2px;background:var(--bg-5);margin:0 auto 24px!important;}
+    .pw-badge{font-family:var(--font-m)!important;font-size:8px!important;letter-spacing:1.5px!important;text-transform:uppercase!important;padding:3px 10px!important;border-radius:4px;background:var(--premium-dim);color:var(--premium);border:1px solid var(--premium-border);display:inline-block;margin-bottom:14px!important;}
+    .pw-title{font-family:var(--font-d)!important;font-size:24px!important;font-weight:700!important;color:var(--ink)!important;margin-bottom:8px!important;}
+    .pw-sub{font-size:14px!important;color:var(--ink-dim)!important;margin-bottom:24px!important;line-height:1.5!important;}
+    .pw-features{margin-bottom:24px!important;}
+    .pw-feature{display:flex;align-items:center;gap:10px;padding:8px 0!important;border-bottom:1px solid var(--bg-4);}
+    .pw-feature:last-child{border-bottom:none!important;}
+    .pw-check{width:24px;height:24px;border-radius:6px;background:rgba(90,122,82,0.15);border:1px solid rgba(90,122,82,0.25);display:flex;align-items:center;justify-content:center;color:var(--sage-light);flex-shrink:0;}
+    .pw-feature-text{font-size:13px!important;color:var(--ink-dim)!important;}
+    .pw-feature-text strong{color:var(--ink)!important;}
+    .pw-cta{width:100%;padding:14px!important;border-radius:10px;background:var(--gold)!important;border:none!important;color:var(--bg)!important;font-family:var(--font-a)!important;font-size:15px!important;font-weight:600!important;cursor:pointer;margin-bottom:10px!important;transition:background 200ms var(--ease);}
+    .pw-cta:hover{background:var(--gold-light)!important;}
+    .pw-free{width:100%;padding:9px!important;border-radius:10px;background:none!important;border:1px solid var(--gold-border)!important;color:var(--ink-dim)!important;font-family:var(--font-m)!important;font-size:9px!important;letter-spacing:1px!important;text-transform:uppercase!important;cursor:pointer;}
+    .pw-plan-row{display:flex;gap:8px;margin-bottom:20px!important;}
+    .pw-plan{flex:1;padding:14px!important;border-radius:10px;border:1px solid var(--gold-border)!important;background:var(--bg-3)!important;cursor:pointer;text-align:center;transition:all 150ms var(--ease);}
+    .pw-plan.active{border-color:var(--gold)!important;background:var(--gold-glow)!important;}
+    .pw-plan-price{font-family:var(--font-d)!important;font-size:22px!important;font-weight:700!important;color:var(--ink)!important;}
+    .pw-plan-label{font-family:var(--font-m)!important;font-size:8px!important;letter-spacing:1px!important;color:var(--ink-muted)!important;}
+    .pw-plan-note{font-size:10px!important;color:var(--sage-light)!important;margin-top:3px!important;}
+
+    /* ══ BOTTOM NAV ══ */
+    .bottom-nav{display:flex;justify-content:space-around;align-items:center;padding:8px 0 var(--safe-b)!important;background:var(--bg);border-top:1px solid var(--gold-border);flex-shrink:0;}
+    .nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;background:none!important;border:none!important;color:var(--ink-muted)!important;cursor:pointer;padding:5px 14px!important;transition:color 150ms var(--ease);position:relative;}
+    .nav-item.active{color:var(--gold)!important;}
+    .nav-item.active::after{content:'';position:absolute;top:-8px;width:14px;height:2px;border-radius:1px;background:var(--gold);}
+    .nav-item span{font-family:var(--font-m)!important;font-size:7px!important;letter-spacing:1px!important;text-transform:uppercase!important;}
+    .nav-item .lock{position:absolute;top:4px;right:10px;font-size:7px;opacity:.5;}
+
+    /* ══ MORE MENU ══ */
+    .more-menu{padding:16px!important;display:flex;flex-direction:column;gap:4px;}
+    .more-btn{display:flex;align-items:center;gap:14px;padding:14px!important;border-radius:10px;background:var(--bg-2)!important;border:1px solid var(--gold-border)!important;color:var(--ink)!important;cursor:pointer;text-align:left;transition:all 150ms var(--ease);}
+    .more-btn:hover{border-color:var(--gold-dim)!important;}
+    .more-btn-icon{width:36px;height:36px;border-radius:9px;background:var(--gold-glow);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;color:var(--gold);flex-shrink:0;}
+    .more-btn-text h4{font-size:14px!important;font-weight:500!important;color:var(--ink)!important;}
+    .more-btn-text p{font-size:11px!important;color:var(--ink-muted)!important;}
+    .more-btn-right{margin-left:auto;}
+    .more-premium-note{font-family:var(--font-m)!important;font-size:7px!important;letter-spacing:1px!important;text-transform:uppercase!important;padding:2px 5px!important;border-radius:3px;background:var(--premium-dim);color:var(--premium);}
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ══ TOPBAR ══ -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div style="font-size:20px;">🦋</div>
+      <div class="topbar-logo">MORF<span>™</span></div>
+      <span class="tier-badge tier-free" id="tierBadge">Gratis</span>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-btn" id="voiceGlobalBtn" title="Voz">
+        <i data-lucide="mic" style="width:15px;height:15px;"></i>
+      </button>
+      <button class="topbar-btn active" id="agentBtn" title="Agente activo">
+        <i data-lucide="bot" style="width:15px;height:15px;"></i>
+      </button>
+      <button class="topbar-btn" onclick="showPaywall()" title="Upgrade">
+        <i data-lucide="sparkles" style="width:15px;height:15px;"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN CONTAINER ══ -->
+  <div class="screen-wrap">
+
+    <!-- ═══ CHAT ═══ -->
+    <div class="screen active" id="s-chat">
+      <div class="usage-bar">
+        <div class="usage-label">7 / 10 mensajes hoy</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="usage-track"><div class="usage-fill" style="width:70%;"></div></div>
+          <button class="usage-upgrade" onclick="showPaywall()">SIN LÍMITE →</button>
+        </div>
+      </div>
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="msg sys">Hoy · 🔒 Encriptado</div>
+        <div class="msg ai">
+          ¡Buenos días! ☀️ ¿Cómo empezamos el día?
+          <div class="msg-actions">
+            <button class="msg-btn" onclick="quickSend('Quiero un desayuno rápido y saludable')">🍳 Desayuno</button>
+            <button class="msg-btn" onclick="quickSend('Dame motivación para hoy')">✨ Motivación</button>
+            <button class="msg-btn" onclick="quickSend('Mi plan de hoy')">📋 Mi plan</button>
+          </div>
+        </div>
+        <div class="msg user">Cuál es mi plan de comida para hoy?</div>
+        <div class="msg ai">
+          Aquí tu plan de hoy 🌿<br><br>
+          <strong>☀️ Desayuno</strong> — Avena de coco con mango<br>
+          <em style="color:var(--ink-muted);font-size:11px;">320 cal · 12g prot · 15 min</em><br><br>
+          <strong>🌞 Comida</strong> — Ensalada de lentejas con nopales<br>
+          <em style="color:var(--ink-muted);font-size:11px;">420 cal · 24g prot · 30 min</em><br><br>
+          <strong>🌙 Cena</strong> — Tacos de coliflor al pastor<br>
+          <em style="color:var(--ink-muted);font-size:11px;">380 cal · 14g prot · 35 min</em>
+          <div class="msg-actions">
+            <button class="msg-btn" onclick="quickSend('Dame la receta completa del desayuno')">Ver receta</button>
+            <button class="msg-btn" onclick="quickSend('Genera imagen del plato')">📸 Ver foto</button>
+          </div>
+        </div>
+        <div class="msg ai">
+          <div class="msg-media">
+            <img src="https://images.unsplash.com/photo-1638176066666-ffb2f013c7dd?w=400&q=80" alt="Smoothie verde" loading="lazy">
+          </div>
+          Tu desayuno listo para inspirarte 🌿
+        </div>
+      </div>
+      <div class="chat-input-bar">
+        <button class="c-btn v-btn" id="voiceBtn">
+          <i data-lucide="mic" style="width:16px;height:16px;"></i>
+        </button>
+        <input class="chat-input" type="text" placeholder="Escribe o habla..." id="chatInput">
+        <button class="c-btn s-btn" id="sendBtn">
+          <i data-lucide="send" style="width:15px;height:15px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ JOURNAL ═══ -->
+    <div class="screen" id="s-journal">
+      <div class="s-head">
+        <h2>Diario IA</h2>
+        <p>Tus memorias, patrones y reflexiones</p>
+      </div>
+      <div class="journal-list">
+        <div class="journal-entry" onclick="openJournalEntry('Semana de claridad', 'Hoy me siento más enfocada que nunca...','😌')">
+          <div class="je-header"><span class="je-date">HOY · LUN 7 ABR</span><span class="je-mood">😌</span></div>
+          <div class="je-title">Semana de claridad</div>
+          <div class="je-preview">Me siento más enfocada que nunca después de la meditación matutina. El ayuno 16:8 está...</div>
+          <div class="je-tags"><span class="je-tag">Bienestar</span><span class="je-tag je-ai-tag">✦ IA guardó 3 insights</span></div>
+        </div>
+        <div class="journal-entry" onclick="openJournalEntry('Reunión complicada', 'Tuve una reunión difícil hoy...','😤')">
+          <div class="je-header"><span class="je-date">DOM 6 ABR</span><span class="je-mood">😤</span></div>
+          <div class="je-title">Reunión complicada</div>
+          <div class="je-preview">Tuve que establecer límites con un cliente. Me costó trabajo pero fue necesario para...</div>
+          <div class="je-tags"><span class="je-tag">Negocio</span><span class="je-tag">Límites</span></div>
+        </div>
+        <div class="journal-entry" onclick="openJournalEntry('Nuevo récord personal','Corri 5km sin parar...','💪')">
+          <div class="je-header"><span class="je-date">SAB 5 ABR</span><span class="je-mood">💪</span></div>
+          <div class="je-title">Nuevo récord personal</div>
+          <div class="je-preview">Corrí 5km sin parar por primera vez en mi vida. Llevaba 3 meses preparándome sin saberlo...</div>
+          <div class="je-tags"><span class="je-tag">Fitness</span><span class="je-tag je-ai-tag">✦ Patrón detectado</span></div>
+        </div>
+        <div class="journal-entry" onclick="openJournalEntry('Mis metas de abril','Este mes quiero...','🎯')">
+          <div class="je-header"><span class="je-date">MAR 1 ABR</span><span class="je-mood">🎯</span></div>
+          <div class="je-title">Mis metas de abril</div>
+          <div class="je-preview">Este mes quiero terminar el curso online, bajar 1.5kg, y lanzar mi nuevo producto digital...</div>
+          <div class="je-tags"><span class="je-tag">Metas</span><span class="je-tag">Negocio</span><span class="je-tag je-ai-tag">✦ Conectado a plan</span></div>
+        </div>
+      </div>
+      <!-- FAB -->
+      <div class="journal-fab">
+        <button class="fab-btn" onclick="openJournalWrite()">
+          <i data-lucide="pen-line" style="width:20px;height:20px;"></i>
+        </button>
+      </div>
+
+      <!-- JOURNAL WRITE OVERLAY -->
+      <div class="journal-write" id="journalWrite">
+        <div class="jw-header">
+          <button class="jw-back" onclick="closeJournalWrite()">
+            <i data-lucide="arrow-left" style="width:20px;height:20px;"></i>
+          </button>
+          <input class="jw-title-input" type="text" placeholder="Título de tu entrada..." id="jwTitle">
+          <button class="jw-save" onclick="saveJournalEntry()">Guardar</button>
+        </div>
+        <div class="jw-mood-row">
+          <button class="mood-btn active" onclick="setMood(this,'😊')">😊</button>
+          <button class="mood-btn" onclick="setMood(this,'😌')">😌</button>
+          <button class="mood-btn" onclick="setMood(this,'😤')">😤</button>
+          <button class="mood-btn" onclick="setMood(this,'😴')">😴</button>
+          <button class="mood-btn" onclick="setMood(this,'💪')">💪</button>
+          <button class="mood-btn" onclick="setMood(this,'🎯')">🎯</button>
+          <button class="mood-btn" onclick="setMood(this,'🙏')">🙏</button>
+          <button class="mood-btn" onclick="setMood(this,'❤️')">❤️</button>
+        </div>
+        <div class="jw-body">
+          <textarea class="jw-editor" id="jwEditor" placeholder="Escribe libremente. Nadie más verá esto. La IA aprende de ti para acompañarte mejor..."></textarea>
+        </div>
+        <div class="jw-ai-bar">
+          <div class="jw-ai-prompt" id="aiPrompt">✦ ¿En qué momento del día te sientes más energizada?</div>
+          <button class="jw-ai-btn" onclick="newAiPrompt()">Nuevo prompt</button>
+        </div>
+        <div class="ai-memory-row">
+          <div class="ai-memory-label">
+            <i data-lucide="brain" style="width:14px;height:14px;color:var(--gold);"></i>
+            Guardar en Memoria IA
+          </div>
+          <div class="toggle on" id="memoryToggle" onclick="this.classList.toggle('on')"><div class="toggle-k"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MEAL PLAN ═══ -->
+    <div class="screen" id="s-meals">
+      <div class="s-head">
+        <h2>Mi Plan</h2>
+        <p>Semana del 7 al 13 de Abril</p>
+      </div>
+      <div class="regen-bar">
+        <button class="regen-btn" onclick="quickSend('Regenera mi plan de comida esta semana con variedad')">
+          <i data-lucide="sparkles" style="width:14px;height:14px;"></i> Regenerar con IA
+        </button>
+        <button class="regen-btn2" onclick="switchToScreen('s-chat')">Lista de compras →</button>
+      </div>
+      <div class="meal-list">
+        <div class="meal-day">
+          <div class="md-header"><span class="md-name">Lunes</span><span class="md-badge">Hoy</span></div>
+          <div class="meal-card">
+            <div class="mc-icon"><i data-lucide="sunrise" style="width:14px;height:14px;"></i></div>
+            <div class="mc-info"><h4>Avena de coco con mango</h4><p>Leche de coco, chía, miel de agave</p><div class="mc-macros"><span class="mc-m"><strong>320</strong> cal</span><span class="mc-m"><strong>12g</strong> prot</span><span class="mc-m"><strong>45g</strong> carb</span></div></div>
+          </div>
+          <div class="meal-card">
+            <div class="mc-icon"><i data-lucide="sun" style="width:14px;height:14px;"></i></div>
+            <div class="mc-info"><h4>Ensalada de lentejas con nopales</h4><p>Limón, cilantro, aguacate, chile</p><div class="mc-macros"><span class="mc-m"><strong>420</strong> cal</span><span class="mc-m"><strong>24g</strong> prot</span></div></div>
+          </div>
+          <div class="meal-card">
+            <div class="mc-icon"><i data-lucide="moon" style="width:14px;height:14px;"></i></div>
+            <div class="mc-info"><h4>Tacos de coliflor al pastor</h4><p>Piña, cebolla morada, salsa verde</p><div class="mc-macros"><span class="mc-m"><strong>380</strong> cal</span><span class="mc-m"><strong>14g</strong> prot</span></div></div>
+          </div>
+        </div>
+        <div class="meal-day">
+          <div class="md-header"><span class="md-name">Martes</span></div>
+          <div class="meal-card">
+            <div class="mc-icon"><i data-lucide="sunrise" style="width:14px;height:14px;"></i></div>
+            <div class="mc-info"><h4>Smoothie verde proteico</h4><p>Espinaca, plátano, proteína de hemp</p><div class="mc-macros"><span class="mc-m"><strong>280</strong> cal</span><span class="mc-m"><strong>22g</strong> prot</span></div></div>
+          </div>
+          <div class="meal-card">
+            <div class="mc-icon"><i data-lucide="sun" style="width:14px;height:14px;"></i></div>
+            <div class="mc-info"><h4>Pozole verde vegano</h4><p>Hongos, pepitas, tomatillo, lechuga</p><div class="mc-macros"><span class="mc-m"><strong>350</strong> cal</span><span class="mc-m"><strong>16g</strong> prot</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PROGRESS ═══ -->
+    <div class="screen" id="s-progress">
+      <div class="s-head"><h2>Progreso</h2><p>Últimas 4 semanas</p></div>
+      <div class="prog-stats">
+        <div class="stat-box"><div class="stat-label">Peso</div><div class="stat-val">62.5kg</div><div class="stat-change"><i data-lucide="trending-down" style="width:12px;height:12px;"></i>-1.2 este mes</div></div>
+        <div class="stat-box"><div class="stat-label">Racha</div><div class="stat-val">14d</div><div class="stat-change"><i data-lucide="flame" style="width:12px;height:12px;color:var(--rust);"></i>Récord personal</div></div>
+        <div class="stat-box"><div class="stat-label">Cal. hoy</div><div class="stat-val">1,120</div><div class="stat-change">de 1,800 meta</div></div>
+        <div class="stat-box"><div class="stat-label">Proteína</div><div class="stat-val">48g</div><div class="stat-change">de 80g meta</div></div>
+      </div>
+      <div class="prog-chart">
+        <div class="bar" style="height:68%;"></div><div class="bar" style="height:62%;"></div><div class="bar" style="height:65%;"></div><div class="bar" style="height:58%;"></div><div class="bar" style="height:60%;"></div><div class="bar" style="height:54%;"></div><div class="bar" style="height:57%;"></div><div class="bar" style="height:50%;"></div><div class="bar" style="height:52%;"></div><div class="bar" style="height:48%;"></div><div class="bar" style="height:46%;"></div><div class="bar" style="height:50%;"></div><div class="bar" style="height:43%;"></div><div class="bar now" style="height:40%;"></div>
+      </div>
+      <div style="padding:0 14px 14px!important;">
+        <div class="intel-brief">
+          <div class="ib-row"><span class="ib-tag">Insight IA</span><span class="ib-time">Hoy</span></div>
+          <div class="ib-title">Tu mejor semana en 2 meses 🎉</div>
+          <div class="ib-summary">Dormiste más de 7 hrs 5 de 7 días. Tu energía y adherencia al plan están correlacionadas. Sigue así.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ BRAIN ═══ -->
+    <div class="screen" id="s-brain">
+      <div class="s-head"><h2>Mi Cerebro</h2><p>Notas, inteligencia y segundo cerebro</p></div>
+      <div class="brain-tabs">
+        <button class="brain-tab active" onclick="switchBrainTab('notas',this)">Notas</button>
+        <button class="brain-tab" onclick="switchBrainTab('intel',this)">Briefings</button>
+        <button class="brain-tab" onclick="switchBrainTab('buscar',this)">Buscar</button>
+      </div>
+      <div class="brain-panel active" id="bp-notas">
+        <div class="brain-card" onclick="switchToSearch('notas')">
+          <div class="bc-title">Lista de compras semanal</div>
+          <div class="bc-desc">Aguacate ×4, nopal, lentejas 500g, tomate, chile serrano...</div>
+          <div class="bc-meta"><span class="b-tag bt-sage">Compras</span><span class="b-tag bt-gold">Auto-generada</span></div>
+        </div>
+        <div class="brain-card">
+          <div class="bc-title">Ideas para mi curso online</div>
+          <div class="bc-desc">Módulo 1: Mentalidad de emprendedora. Módulo 2: Sistemas de productividad...</div>
+          <div class="bc-meta"><span class="b-tag bt-rust">Negocio</span></div>
+        </div>
+        <div class="brain-card">
+          <div class="bc-title">Lecturas pendientes</div>
+          <div class="bc-desc">Atomic Habits — cap 8 en adelante. The Body Keeps the Score...</div>
+          <div class="bc-meta"><span class="b-tag bt-sage">Aprendizaje</span></div>
+        </div>
+        <div class="brain-card">
+          <div class="bc-title">Afirmaciones del mes</div>
+          <div class="bc-desc">Soy capaz de manejar cualquier reto. Mi cuerpo merece cuidado. Cada paso suma...</div>
+          <div class="bc-meta"><span class="b-tag bt-gold">Mindset</span></div>
+        </div>
+      </div>
+      <div class="brain-panel" id="bp-intel">
+        <div class="intel-brief">
+          <div class="ib-row"><span class="ib-tag">Nutrición</span><span class="ib-time">7:00 AM</span></div>
+          <div class="ib-title">Ayuno intermitente: nuevo estudio UNAM</div>
+          <div class="ib-summary">Beneficios específicos del 16:8 para mujeres en edad reproductiva: +23% sensibilidad insulina.</div>
+        </div>
+        <div class="intel-brief">
+          <div class="ib-row"><span class="ib-tag bt-sage" style="background:var(--sage-dim);color:var(--sage-light);padding:2px 5px!important;border-radius:3px;font-family:var(--font-m)!important;font-size:7px!important;letter-spacing:1px!important;text-transform:uppercase!important;">Bienestar</span><span class="ib-time">7:00 AM</span></div>
+          <div class="ib-title">Respiración 4-7-8 para el estrés</div>
+          <div class="ib-summary">3 minutos entre reuniones reduce cortisol 23%. Ideal para emprendedoras con agenda densa.</div>
+        </div>
+        <div class="intel-brief">
+          <div class="ib-row"><span class="ib-tag">Fitness</span><span class="ib-time">7:00 AM</span></div>
+          <div class="ib-title">Microdosis de ejercicio — Stanford</div>
+          <div class="ib-summary">5 minutos de alta intensidad mejoran estado de ánimo más que 30 min a ritmo moderado.</div>
+        </div>
+        <div class="intel-brief">
+          <div class="ib-row"><span class="ib-tag bt-rust" style="background:rgba(176,92,56,0.12);color:var(--terracotta);padding:2px 5px!important;border-radius:3px;font-family:var(--font-m)!important;font-size:7px!important;letter-spacing:1px!important;text-transform:uppercase!important;">LATAM</span><span class="ib-time">7:00 AM</span></div>
+          <div class="ib-title">Tendencias wellness CDMX 2026</div>
+          <div class="ib-summary">Crecen retiros de bienestar cortos (1-2 días), talleres de fermentación y yoga en empresas.</div>
+        </div>
+      </div>
+      <div class="brain-panel" id="bp-buscar">
+        <input class="chat-input" type="text" placeholder="Buscar en mis notas y memoria..." style="width:100%;border-radius:8px;" oninput="searchBrain(this.value)">
+        <div style="margin-top:14px!important;" id="brainSearchResults">
+          <div style="text-align:center;color:var(--ink-muted);font-size:13px;padding:32px!important;">Escribe para buscar en tu cerebro</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CONNECT (Composio) ═══ -->
+    <div class="screen" id="s-connect">
+      <div class="s-head"><h2>Conectar</h2><p>Integra tus apps favoritas</p></div>
+      <div class="connect-intro">
+        <p>Tu guía IA trabaja mejor cuando conoce el contexto real de tu vida. Conecta las apps que ya usas.</p>
+      </div>
+
+      <div class="connect-section">
+        <div class="cs-title">Conectadas</div>
+        <div class="integrations-grid">
+          <div class="integration-row">
+            <div class="int-left">
+              <div class="int-icon" style="background:rgba(37,211,102,0.12);font-size:18px;">💬</div>
+              <div class="int-info"><h4>WhatsApp</h4><p>Recibe recordatorios y briefings</p></div>
+            </div>
+            <button class="int-status int-connected">Activo</button>
+          </div>
+          <div class="integration-row">
+            <div class="int-left">
+              <div class="int-icon" style="background:rgba(66,133,244,0.12);font-size:18px;">📅</div>
+              <div class="int-info"><h4>Google Calendar</h4><p>IA ve tu día y adapta tu plan</p></div>
+            </div>
+            <button class="int-status int-connected">Activo</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="connect-section">
+        <div class="cs-title">Disponibles</div>
+        <div class="integrations-grid">
+          <div class="integration-row">
+            <div class="int-left">
+              <div class="int-icon" style="background:rgba(234,67,53,0.12);font-size:18px;">📧</div>
+              <div class="int-info"><h4>Gmail</h4><p>Resumen diario de emails</p></div>
+            </div>
+            <button class="int-status int-connect" onclick="connectApp('Gmail')">Conectar</button>
+          </div>
+          <div class="integration-row">
+            <div class="int-left">
+              <div class="int-icon" style="background:rgba(0,0,0,0.3);font-size:18px;">📝</div>
+              <div class="int-info"><h4>Notion</h4><p>Sync con tu base de notas</p></div>
+            </div>
+            <button class="int-status int-connect" onclick="connectApp('Notion')">Conectar</button>
+          </div>
+          <div class="integration-row">
+            <div class="int-left">
+              <div class="int-icon" style="background:rgba(255,30,86,0.12);font-size:18px;">❤️</div>
+              <div class="int-info"><h4>Apple Health</h4><p>Datos de sueño, pasos, corazón</p></div>
+            </div>
+            <button class="int-status int-connect" onclick="connectApp('Apple Health')">Conectar</button>
+          </div>
+          <div class="integration-row">
+            <div class="int-left">
+              <div class="int-icon" style="background:rgba(30,215,96,0.12);font-size:18px;">🎵</div>
+              <div class="int-info"><h4>Spotify</h4><p>Playlists según tu estado de ánimo</p></div>
+            </div>
+            <button class="int-status int-premium" onclick="showPaywall()">✦ Premium</button>
+          </div>
+          <div class="integration-row">
+            <div class="int-left">
+              <div class="int-icon" style="background:rgba(225,48,108,0.12);font-size:18px;">📸</div>
+              <div class="int-info"><h4>Instagram</h4><p>Lee tu uso y recomienda pausas</p></div>
+            </div>
+            <button class="int-status int-premium" onclick="showPaywall()">✦ Premium</button>
+          </div>
+          <div class="integration-row">
+            <div class="int-left">
+              <div class="int-icon" style="background:rgba(0,136,204,0.12);font-size:18px;">💙</div>
+              <div class="int-info"><h4>Telegram</h4><p>Agente en tu chat de Telegram</p></div>
+            </div>
+            <button class="int-status int-premium" onclick="showPaywall()">✦ Premium</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="connect-section">
+        <div class="cs-title">Tu API</div>
+        <div class="integration-row">
+          <div class="int-left">
+            <div class="int-icon" style="background:rgba(16,163,127,0.12);font-size:18px;">🤖</div>
+            <div class="int-info"><h4>ChatGPT Plus (BYOK)</h4><p>Usa tu suscripción de OpenAI</p></div>
+          </div>
+          <button class="int-status int-connect" onclick="bindApiKey()">Vincular</button>
+        </div>
+        <div class="integration-row">
+          <div class="int-left">
+            <div class="int-icon" style="background:rgba(255,153,0,0.12);font-size:18px;">🧠</div>
+            <div class="int-info"><h4>Claude / Gemini / Llama</h4><p>Elige tu modelo de IA</p></div>
+          </div>
+          <button class="int-status int-connect" onclick="chooseModel()">Elegir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MORE MENU ═══ -->
+    <div class="screen" id="s-more">
+      <div class="s-head"><h2>Más</h2><p>Todas las funciones</p></div>
+      <div class="more-menu">
+        <button class="more-btn" onclick="switchToScreen('s-progress')">
+          <div class="more-btn-icon"><i data-lucide="trending-up" style="width:18px;height:18px;"></i></div>
+          <div class="more-btn-text"><h4>Progreso</h4><p>Peso, hábitos, racha</p></div>
+          <div class="more-btn-right"><i data-lucide="chevron-right" style="width:14px;height:14px;color:var(--ink-muted);"></i></div>
+        </button>
+        <button class="more-btn" onclick="handlePremium('connect')">
+          <div class="more-btn-icon" style="background:var(--premium-dim);border-color:var(--premium-border);color:var(--premium);"><i data-lucide="plug" style="width:18px;height:18px;"></i></div>
+          <div class="more-btn-text"><h4>Conectar apps</h4><p>Composio integrations</p></div>
+          <div class="more-btn-right"><span class="more-premium-note">Premium</span></div>
+        </button>
+        <button class="more-btn" onclick="switchToScreen('s-settings')">
+          <div class="more-btn-icon"><i data-lucide="settings" style="width:18px;height:18px;"></i></div>
+          <div class="more-btn-text"><h4>Ajustes</h4><p>Privacidad, BYOK, perfil</p></div>
+          <div class="more-btn-right"><i data-lucide="chevron-right" style="width:14px;height:14px;color:var(--ink-muted);"></i></div>
+        </button>
+        <button class="more-btn" onclick="switchToScreen('s-invite')">
+          <div class="more-btn-icon" style="background:rgba(196,150,60,0.15);border-color:var(--gold-border);color:var(--gold);"><i data-lucide="users" style="width:18px;height:18px;"></i></div>
+          <div class="more-btn-text"><h4>Invitar amigas</h4><p>Tu código de referido</p></div>
+          <div class="more-btn-right"><i data-lucide="chevron-right" style="width:14px;height:14px;color:var(--ink-muted);"></i></div>
+        </button>
+        <button class="more-btn" onclick="showPaywall()">
+          <div class="more-btn-icon" style="background:var(--premium-dim);border-color:var(--premium-border);color:var(--premium);"><i data-lucide="sparkles" style="width:18px;height:18px;"></i></div>
+          <div class="more-btn-text"><h4>Metamorfosis Premium</h4><p>Sin límites · Todas las funciones</p></div>
+          <div class="more-btn-right"><span style="font-family:var(--font-m);font-size:10px;color:var(--gold);">Gratis 7 días →</span></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ SETTINGS ═══ -->
+    <div class="screen" id="s-settings">
+      <div class="s-head"><h2>Ajustes</h2><p></p></div>
+      <div class="settings-wrap">
+        <div class="sg-title">Privacidad</div>
+        <div class="settings-item" onclick="bindApiKey()">
+          <div class="si-left"><div class="si-icon"><i data-lucide="key" style="width:14px;height:14px;"></i></div><div><div class="si-label">BYOK — Mi API Key</div><div class="si-desc">Vincula tu ChatGPT Plus</div></div></div>
+          <i data-lucide="chevron-right" style="width:14px;height:14px;color:var(--ink-muted);"></i>
+        </div>
+        <div class="settings-item">
+          <div class="si-left"><div class="si-icon"><i data-lucide="shield" style="width:14px;height:14px;"></i></div><div><div class="si-label">Encriptación E2E</div><div class="si-desc">AES-256-GCM activo</div></div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-k"></div></div>
+        </div>
+
+        <div class="sg-title">Agente</div>
+        <div class="settings-item">
+          <div class="si-left"><div class="si-icon" style="background:var(--sage-dim);border-color:rgba(90,122,82,0.2);color:var(--sage);"><i data-lucide="bot" style="width:14px;height:14px;"></i></div><div><div class="si-label">Modo Agente Hermes</div><div class="si-desc">Busca y actúa en la web</div></div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-k"></div></div>
+        </div>
+        <div class="settings-item" onclick="chooseModel()">
+          <div class="si-left"><div class="si-icon" style="background:rgba(139,92,246,0.1);border-color:var(--premium-border);color:var(--premium);"><i data-lucide="cpu" style="width:14px;height:14px;"></i></div><div><div class="si-label">Modelo de IA</div><div class="si-desc">GPT-4o (predeterminado)</div></div></div>
+          <i data-lucide="chevron-right" style="width:14px;height:14px;color:var(--ink-muted);"></i>
+        </div>
+
+        <div class="sg-title">Reportes</div>
+        <div class="settings-item">
+          <div class="si-left"><div class="si-icon" style="background:var(--sage-dim);border-color:rgba(90,122,82,0.2);color:var(--sage);"><i data-lucide="newspaper" style="width:14px;height:14px;"></i></div><div><div class="si-label">Briefing diario</div><div class="si-desc">7:00 AM · Salud y bienestar</div></div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-k"></div></div>
+        </div>
+
+        <div class="sg-title">Cuenta</div>
+        <div class="settings-item"><div class="si-left"><div class="si-icon"><i data-lucide="user" style="width:14px;height:14px;"></i></div><div><div class="si-label">Mi perfil</div><div class="si-desc">Nombre, metas, dieta</div></div></div><i data-lucide="chevron-right" style="width:14px;height:14px;color:var(--ink-muted);"></i></div>
+        <div class="settings-item"><div class="si-left"><div class="si-icon"><i data-lucide="languages" style="width:14px;height:14px;"></i></div><div><div class="si-label">Idioma</div><div class="si-desc">Español (México)</div></div></div><i data-lucide="chevron-right" style="width:14px;height:14px;color:var(--ink-muted);"></i></div>
+        <div class="settings-item" onclick="if(confirm('¿Estás segura?')) alert('Sesión cerrada.')">
+          <div class="si-left"><div class="si-icon" style="background:rgba(176,92,56,0.1);border-color:rgba(176,92,56,0.2);color:var(--rust);"><i data-lucide="log-out" style="width:14px;height:14px;"></i></div><div><div class="si-label" style="color:var(--rust);">Cerrar sesión</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ INVITE ═══ -->
+    <div class="screen" id="s-invite">
+      <div class="s-head"><h2>Invitar amigas</h2><p>Comparte y sube en la comunidad</p></div>
+      <div class="s-content">
+        <div class="invite-block">
+          <h4>Tu código de invitación</h4>
+          <p>Cada amiga que invitas sube tu acceso a funciones premium. Sin costo.</p>
+          <div class="invite-code-box">MORF-2847</div>
+          <p style="font-size:11px;color:var(--ink-muted);margin-bottom:14px;">2 amigas invitadas · 1 nivel Premium desbloqueado</p>
+          <button class="invite-share-btn" onclick="shareInvite()">
+            Compartir mi código 🦋
+          </button>
+        </div>
+        <div style="margin-top:20px!important;">
+          <div class="sg-title" style="margin-top:0!important;">Tu comunidad</div>
+          <div class="brain-card" style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--sage));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">A</div>
+            <div><div class="bc-title">Ana G. — Ciudad de México</div><div class="bc-desc">Unida hace 3 días</div></div>
+          </div>
+          <div class="brain-card" style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--rust),var(--gold));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">L</div>
+            <div><div class="bc-title">Laura M. — Bogotá</div><div class="bc-desc">Unida hace 1 semana</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /screen-wrap -->
+
+  <!-- ══ BOTTOM NAV ══ -->
+  <div class="bottom-nav">
+    <button class="nav-item active" data-screen="s-chat">
+      <i data-lucide="message-circle" style="width:20px;height:20px;"></i>
+      <span>Chat</span>
+    </button>
+    <button class="nav-item" data-screen="s-journal">
+      <i data-lucide="book-open" style="width:20px;height:20px;"></i>
+      <span>Diario</span>
+    </button>
+    <button class="nav-item" data-screen="s-meals">
+      <i data-lucide="utensils" style="width:20px;height:20px;"></i>
+      <span>Plan</span>
+    </button>
+    <button class="nav-item" data-screen="s-brain">
+      <i data-lucide="brain" style="width:20px;height:20px;"></i>
+      <span>Cerebro</span>
+    </button>
+    <button class="nav-item" data-screen="s-more">
+      <i data-lucide="grid-2x2" style="width:20px;height:20px;"></i>
+      <span>Más</span>
+    </button>
+  </div>
+
+  <!-- ══ PAYWALL MODAL ══ -->
+  <div class="modal-overlay" id="paywallModal" onclick="closePaywall(event)">
+    <div class="paywall" onclick="event.stopPropagation()">
+      <div class="pw-handle"></div>
+      <div class="pw-badge">✦ Premium</div>
+      <div class="pw-title">Sin límites.<br>Todo el poder.</div>
+      <div class="pw-sub">7 días gratis. Luego elige tu plan. Cancela cuando quieras.</div>
+
+      <div class="pw-plan-row">
+        <div class="pw-plan" onclick="selectPlan(this,'mensual')">
+          <div class="pw-plan-price">$12</div>
+          <div class="pw-plan-label">/ mes</div>
+        </div>
+        <div class="pw-plan active" onclick="selectPlan(this,'anual')">
+          <div class="pw-plan-price">$89</div>
+          <div class="pw-plan-label">/ año</div>
+          <div class="pw-plan-note">Ahorra 38%</div>
+        </div>
+      </div>
+
+      <div class="pw-features">
+        <div class="pw-feature"><div class="pw-check"><i data-lucide="check" style="width:12px;height:12px;"></i></div><div class="pw-feature-text"><strong>Chat ilimitado</strong> con cualquier modelo</div></div>
+        <div class="pw-feature"><div class="pw-check"><i data-lucide="check" style="width:12px;height:12px;"></i></div><div class="pw-feature-text"><strong>Diario con Memoria IA</strong> — patrones y crecimiento</div></div>
+        <div class="pw-feature"><div class="pw-check"><i data-lucide="check" style="width:12px;height:12px;"></i></div><div class="pw-feature-text"><strong>Plan de comida semanal</strong> regenerado con IA</div></div>
+        <div class="pw-feature"><div class="pw-check"><i data-lucide="check" style="width:12px;height:12px;"></i></div><div class="pw-feature-text"><strong>Conecta tus apps</strong> vía Composio</div></div>
+        <div class="pw-feature"><div class="pw-check"><i data-lucide="check" style="width:12px;height:12px;"></i></div><div class="pw-feature-text"><strong>BYOK</strong> — usa tu ChatGPT Plus</div></div>
+        <div class="pw-feature"><div class="pw-check"><i data-lucide="check" style="width:12px;height:12px;"></i></div><div class="pw-feature-text"><strong>Briefings diarios</strong> personalizados 7AM</div></div>
+      </div>
+
+      <button class="pw-cta" onclick="activatePremium()">Empezar gratis 7 días</button>
+      <button class="pw-free" onclick="closePaywall()">Seguir en plan gratis</button>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+  lucide.createIcons();
+
+  // ── NAV ──
+  const navItems = document.querySelectorAll('.nav-item[data-screen]');
+  navItems.forEach(btn => {
+    btn.addEventListener('click', () => {
+      switchToScreen(btn.dataset.screen);
+      navItems.forEach(n => n.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  function switchToScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id)?.classList.add('active');
+    // Keep nav in sync
+    navItems.forEach(n => {
+      n.classList.toggle('active', n.dataset.screen === id);
+    });
+  }
+
+  // ── CHAT ──
+  const chatInput = document.getElementById('chatInput');
+  const chatMsgs = document.getElementById('chatMsgs');
+  const voiceBtn = document.getElementById('voiceBtn');
+  let isRecording = false;
+
+  function sendMessage(text) {
+    if (!text?.trim()) return;
+    addMsg(text, 'user');
+    const typing = document.createElement('div');
+    typing.className = 'typing'; typing.innerHTML = '<span></span><span></span><span></span>';
+    chatMsgs.appendChild(typing); chatMsgs.scrollTop = chatMsgs.scrollHeight;
+    setTimeout(() => {
+      typing.remove();
+      const replies = [
+        '¡Claro! Aquí tienes lo que necesitas 🦋',
+        'Basándome en tu perfil y metas, esto es lo que recomiendo...',
+        'Perfecto, lo tengo. Preparando tu respuesta personalizada ✨',
+        'Interesante pregunta. Déjame buscar información específica para ti.',
+        'Entendido. Recuerda que cada paso suma, sin importar el tamaño 💪',
+      ];
+      addMsg(replies[Math.floor(Math.random() * replies.length)], 'ai');
+    }, 1200);
+  }
+
+  function addMsg(text, role) {
+    const d = document.createElement('div');
+    d.className = `msg ${role}`; d.textContent = text;
+    chatMsgs.appendChild(d); chatMsgs.scrollTop = chatMsgs.scrollHeight;
+  }
+
+  function quickSend(text) { sendMessage(text); switchToScreen('s-chat'); }
+
+  chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') { sendMessage(chatInput.value); chatInput.value = ''; }});
+  document.getElementById('sendBtn').addEventListener('click', () => { sendMessage(chatInput.value); chatInput.value = ''; });
+
+  voiceBtn.addEventListener('click', () => {
+    isRecording = !isRecording;
+    voiceBtn.classList.toggle('rec', isRecording);
+    if (isRecording && 'webkitSpeechRecognition' in window) {
+      const sr = new webkitSpeechRecognition();
+      sr.lang = 'es-MX'; sr.onresult = e => { chatInput.value = e.results[0][0].transcript; isRecording = false; voiceBtn.classList.remove('rec'); };
+      sr.onerror = () => { isRecording = false; voiceBtn.classList.remove('rec'); };
+      sr.start();
+    }
+  });
+
+  // ── JOURNAL ──
+  let selectedMood = '😊';
+  const journalWrite = document.getElementById('journalWrite');
+
+  function openJournalWrite() {
+    journalWrite.classList.add('open');
+    lucide.createIcons();
+  }
+  function closeJournalWrite() { journalWrite.classList.remove('open'); }
+  function openJournalEntry(title, content, mood) {
+    document.getElementById('jwTitle').value = title;
+    document.getElementById('jwEditor').value = content;
+    selectedMood = mood;
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.toggle('active', b.textContent === mood));
+    openJournalWrite();
+  }
+  function setMood(el, mood) {
+    selectedMood = mood;
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+  function saveJournalEntry() {
+    const title = document.getElementById('jwTitle').value.trim() || 'Sin título';
+    const content = document.getElementById('jwEditor').value.trim();
+    if (!content) { alert('Escribe algo primero'); return; }
+    closeJournalWrite();
+    // Add to list
+    const list = document.querySelector('.journal-list');
+    const entry = document.createElement('div');
+    entry.className = 'journal-entry';
+    entry.innerHTML = `<div class="je-header"><span class="je-date">HOY</span><span class="je-mood">${selectedMood}</span></div><div class="je-title">${title}</div><div class="je-preview">${content.slice(0,80)}...</div><div class="je-tags"><span class="je-tag je-ai-tag">✦ Guardado en memoria</span></div>`;
+    list.insertBefore(entry, list.firstChild);
+  }
+
+  const aiPrompts = [
+    '✦ ¿Qué quieres recordar de este momento dentro de un año?',
+    '✦ ¿Cómo te sientes en tu cuerpo ahora mismo?',
+    '✦ ¿Qué te costó trabajo hoy? ¿Qué aprendiste?',
+    '✦ ¿Qué pequeña victoria celebras hoy?',
+    '✦ ¿Qué necesitas dejar ir para avanzar?',
+    '✦ ¿Cómo cuidas tu energía cuando el día es intenso?',
+  ];
+  let promptIdx = 0;
+  function newAiPrompt() {
+    promptIdx = (promptIdx + 1) % aiPrompts.length;
+    document.getElementById('aiPrompt').textContent = aiPrompts[promptIdx];
+  }
+
+  // ── BRAIN ──
+  function switchBrainTab(tab, btn) {
+    document.querySelectorAll('.brain-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.brain-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('bp-' + tab).classList.add('active');
+  }
+
+  function searchBrain(query) {
+    const res = document.getElementById('brainSearchResults');
+    if (!query.trim()) { res.innerHTML = '<div style="text-align:center;color:var(--ink-muted);font-size:13px;padding:32px!important;">Escribe para buscar en tu cerebro</div>'; return; }
+    res.innerHTML = `<div class="brain-card"><div class="bc-title">Lista de compras — ${query}</div><div class="bc-desc">Resultado encontrado en tus notas...</div><div class="bc-meta"><span class="b-tag bt-gold">Memoria IA</span></div></div>`;
+  }
+
+  // ── CONNECT ──
+  function connectApp(name) {
+    alert(`Conectando ${name} via Composio...\n\nEn producción: OAuth flow aquí.`);
+  }
+  function bindApiKey() {
+    const key = prompt('Ingresa tu OpenAI API Key:');
+    if (key?.startsWith('sk-')) alert('¡API key guardada con encriptación AES-256! Tu IA usa tu plan de ChatGPT.');
+  }
+  function chooseModel() {
+    const models = ['GPT-4o ✦', 'GPT-4o mini', 'Claude Opus 4', 'Claude Sonnet', 'Gemini Pro', 'Llama 3 (local)'];
+    const choice = prompt('Elige tu modelo:\n' + models.join('\n'));
+    if (choice) alert(`Modelo cambiado a: ${choice}`);
+  }
+
+  // ── PAYWALL ──
+  let selectedPlan = 'anual';
+  function showPaywall() { document.getElementById('paywallModal').classList.add('open'); lucide.createIcons(); }
+  function closePaywall(e) {
+    if (!e || e.target === document.getElementById('paywallModal')) {
+      document.getElementById('paywallModal').classList.remove('open');
+    }
+  }
+  function selectPlan(el, plan) {
+    selectedPlan = plan;
+    document.querySelectorAll('.pw-plan').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+  }
+  function activatePremium() {
+    document.getElementById('tierBadge').textContent = 'Premium';
+    document.getElementById('tierBadge').className = 'tier-badge tier-premium';
+    document.querySelector('.usage-bar').style.display = 'none';
+    closePaywall();
+    setTimeout(() => alert('🦋 ¡Bienvenida a Premium!\n7 días gratis. Disfruta sin límites.'), 300);
+  }
+
+  function handlePremium(screen) {
+    activatePremium();
+    setTimeout(() => switchToScreen('s-connect'), 200);
+  }
+
+  // ── INVITE ──
+  function shareInvite() {
+    if (navigator.share) {
+      navigator.share({ title: 'Metamorfosis™', text: 'Úsate mi código MORF-2847 para entrar a la comunidad privada 🦋', url: 'https://metamorfosis.app' });
+    } else {
+      navigator.clipboard?.writeText('MORF-2847\nhttps://metamorfosis.app');
+      alert('Código copiado: MORF-2847');
+    }
+  }
+
+  function switchToSearch(q) { switchToScreen('s-brain'); switchBrainTab('buscar', document.querySelectorAll('.brain-tab')[2]); document.querySelector('#bp-buscar input').value = q; searchBrain(q); }
+</script>
+</body>
+</html>
