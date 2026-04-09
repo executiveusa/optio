@@ -1,0 +1,45 @@
+/* Metamorfosis — Global Styles v2
+   Updated palette: morpho blue, heritage gold, deep void */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background: #0a0e1a !important;
+  color: #edf0f5 !important;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+/* Hide scrollbar on mobile */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(43, 143, 217, 0.25);
+  border-radius: 2px;
+}
+
+/* Tap highlight */
+* {
+  -webkit-tap-highlight-color: rgba(43, 143, 217, 0.12);
+}
+
+/* Input reset */
+input, textarea, button, select {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}

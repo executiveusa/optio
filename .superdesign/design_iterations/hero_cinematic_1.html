@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metamorfosis — Cinematic Entry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { 
+      height: 100%; width: 100%; overflow: hidden;
+      background: #0a0e1a !important; color: #edf0f5 !important;
+      font-family: 'DM Sans', system-ui, sans-serif !important;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Scene Container ─────────────────────────────── */
+    .scene {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ── Particle Canvas ─────────────────────────────── */
+    #particles {
+      position: absolute; inset: 0; z-index: 0;
+    }
+
+    /* ── Vignette Overlay ────────────────────────────── */
+    .vignette {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: radial-gradient(ellipse 70% 70% at center, transparent 30%, #0a0e1a 90%);
+    }
+
+    /* ── Skip Button ─────────────────────────────────── */
+    .skip-btn {
+      position: absolute; top: 24px; right: 24px; z-index: 10;
+      background: transparent; border: 1px solid rgba(237,240,245,0.15);
+      color: rgba(237,240,245,0.4); font-size: 12px; font-family: 'DM Sans', sans-serif;
+      padding: 6px 16px; border-radius: 8px; cursor: pointer;
+      opacity: 0; animation: fadeIn 0.4s 1.5s ease forwards;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .skip-btn:hover { color: rgba(237,240,245,0.7); border-color: rgba(237,240,245,0.3); }
+
+    /* ── Cocoon ──────────────────────────────────────── */
+    .cocoon-wrap {
+      position: relative; z-index: 2;
+      width: 120px; height: 160px;
+      opacity: 0;
+      animation: fadeIn 0.8s 0.3s ease forwards;
+    }
+    .cocoon-wrap.dissolve {
+      animation: cocoonDissolve 1.2s ease forwards;
+    }
+
+    .cocoon-threads {
+      position: absolute; inset: 0;
+    }
+    .cocoon-threads svg {
+      width: 100%; height: 100%;
+    }
+    .cocoon-glow {
+      position: absolute; top: 50%; left: 50%;
+      width: 60px; height: 80px; transform: translate(-50%, -50%);
+      background: radial-gradient(ellipse, rgba(232,208,128,0.4), transparent 70%);
+      border-radius: 50%;
+      animation: cocoonPulse 2s 1.5s ease-in-out infinite;
+    }
+
+    /* ── Butterfly ───────────────────────────────────── */
+    .butterfly-wrap {
+      position: relative; z-index: 3;
+      opacity: 0; transform: scale(0.6);
+      pointer-events: none;
+    }
+    .butterfly-wrap.reveal {
+      animation: butterflyReveal 1.8s ease forwards;
+    }
+    .butterfly-wrap.hovering {
+      animation: butterflyHover 4s ease-in-out infinite;
+    }
+    .butterfly-img {
+      width: 260px; height: 260px; object-fit: contain;
+      filter: drop-shadow(0 0 30px rgba(43,143,217,0.4)) drop-shadow(0 0 60px rgba(43,143,217,0.15));
+    }
+
+    /* Light burst behind butterfly */
+    .light-burst {
+      position: absolute; top: 50%; left: 50%;
+      width: 400px; height: 400px; transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(94,196,232,0.15) 0%, rgba(43,143,217,0.05) 40%, transparent 70%);
+      border-radius: 50%; opacity: 0;
+    }
+    .light-burst.active {
+      animation: burstGlow 2s ease forwards;
+    }
+
+    /* ── Title ────────────────────────────────────────── */
+    .title-wrap {
+      position: relative; z-index: 4;
+      text-align: center; margin-top: 32px;
+      opacity: 0;
+    }
+    .title-wrap.assemble {
+      animation: fadeIn 0.3s ease forwards;
+    }
+    .title-text {
+      font-family: 'Playfair Display', serif !important;
+      font-size: clamp(28px, 6vw, 42px) !important;
+      font-weight: 500 !important;
+      letter-spacing: 0.12em !important;
+      color: #edf0f5 !important;
+      line-height: 1 !important;
+    }
+    .title-text .char {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(12px);
+      filter: blur(4px);
+    }
+    .title-text .char.visible {
+      animation: charAssemble 0.5s ease forwards;
+    }
+    .title-underline {
+      width: 0; height: 1px; margin: 12px auto 0;
+      background: linear-gradient(90deg, transparent, rgba(196,150,60,0.6), transparent);
+    }
+    .title-underline.extend {
+      animation: lineExtend 1s 0.3s ease forwards;
+    }
+
+    /* ── CTA ──────────────────────────────────────────── */
+    .cta-wrap {
+      position: relative; z-index: 4;
+      margin-top: 48px; opacity: 0;
+    }
+    .cta-wrap.show {
+      animation: fadeIn 0.6s ease forwards;
+    }
+    .cta-entrar {
+      font-family: 'DM Sans', sans-serif !important;
+      font-size: 15px !important; font-weight: 500 !important;
+      letter-spacing: 0.15em !important; text-transform: uppercase !important;
+      color: #edf0f5 !important;
+      background: transparent !important;
+      border: 1px solid rgba(196,150,60,0.4) !important;
+      padding: 14px 48px !important; border-radius: 8px !important;
+      cursor: pointer !important;
+      position: relative; overflow: hidden;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .cta-entrar:hover {
+      border-color: rgba(196,150,60,0.7) !important;
+      background: rgba(196,150,60,0.08) !important;
+    }
+    .cta-entrar::before {
+      content: ''; position: absolute; inset: -1px;
+      border-radius: 8px; padding: 1px;
+      background: linear-gradient(135deg, rgba(43,143,217,0.3), rgba(196,150,60,0.3));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .cta-entrar:hover::before { opacity: 1; }
+
+    .cta-glow {
+      position: absolute; top: 50%; left: 50%;
+      width: 200px; height: 60px; transform: translate(-50%, -50%);
+      background: radial-gradient(ellipse, rgba(43,143,217,0.12), transparent 70%);
+      border-radius: 50%;
+      animation: subtlePulse 3s ease-in-out infinite;
+    }
+
+    /* ── Keyframes ────────────────────────────────────── */
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    @keyframes cocoonPulse {
+      0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.15); }
+    }
+    @keyframes cocoonDissolve {
+      0% { opacity: 1; transform: scale(1); filter: blur(0); }
+      100% { opacity: 0; transform: scale(0.8); filter: blur(8px); }
+    }
+    @keyframes butterflyReveal {
+      0% { opacity: 0; transform: scale(0.5); filter: blur(6px) brightness(2); }
+      40% { opacity: 1; filter: blur(0) brightness(1.3); }
+      100% { opacity: 1; transform: scale(1); filter: blur(0) brightness(1); }
+    }
+    @keyframes butterflyHover {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes burstGlow {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+      50% { opacity: 1; }
+      100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+    }
+    @keyframes charAssemble {
+      to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
+    @keyframes lineExtend {
+      to { width: 180px; }
+    }
+    @keyframes subtlePulse {
+      0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+    }
+    @keyframes threadSpin {
+      from { stroke-dashoffset: 800; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width: 430px) {
+      .butterfly-img { width: 180px; height: 180px; }
+      .light-burst { width: 280px; height: 280px; }
+      .title-text { font-size: 24px !important; }
+    }
+    @media (min-width: 431px) and (max-width: 768px) {
+      .butterfly-img { width: 220px; height: 220px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene" id="scene">
+    <canvas id="particles"></canvas>
+    <div class="vignette"></div>
+
+    <button class="skip-btn" id="skipBtn">Saltar</button>
+
+    <!-- Scene 1-2: Cocoon -->
+    <div class="cocoon-wrap" id="cocoon">
+      <div class="cocoon-glow"></div>
+      <div class="cocoon-threads">
+        <svg viewBox="0 0 120 160" fill="none">
+          <ellipse cx="60" cy="80" rx="30" ry="50" stroke="rgba(232,208,128,0.25)" stroke-width="0.8"
+            stroke-dasharray="400" stroke-dashoffset="400" style="animation: threadSpin 3s 0.5s ease forwards;" />
+          <ellipse cx="60" cy="80" rx="35" ry="55" stroke="rgba(94,196,232,0.15)" stroke-width="0.5"
+            stroke-dasharray="500" stroke-dashoffset="500" style="animation: threadSpin 3.5s 0.8s ease forwards;" />
+          <ellipse cx="60" cy="80" rx="25" ry="45" stroke="rgba(196,150,60,0.2)" stroke-width="0.6"
+            stroke-dasharray="350" stroke-dashoffset="350" style="animation: threadSpin 2.8s 0.3s ease forwards;" />
+          <!-- Spiral threads -->
+          <path d="M60,30 Q80,50 60,80 Q40,110 60,130" stroke="rgba(232,208,128,0.18)" stroke-width="0.5"
+            stroke-dasharray="300" stroke-dashoffset="300" style="animation: threadSpin 4s 1s ease forwards;" />
+          <path d="M60,30 Q40,50 60,80 Q80,110 60,130" stroke="rgba(94,196,232,0.12)" stroke-width="0.4"
+            stroke-dasharray="300" stroke-dashoffset="300" style="animation: threadSpin 4s 1.2s ease forwards;" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Scene 3: Butterfly -->
+    <div class="butterfly-wrap" id="butterfly">
+      <div class="light-burst" id="lightBurst"></div>
+      <img class="butterfly-img" src="METAMORPHOSIS/metamorfosis logo.png" alt="Metamorfosis" />
+    </div>
+
+    <!-- Scene 4: Title -->
+    <div class="title-wrap" id="title">
+      <div class="title-text" id="titleText"></div>
+      <div class="title-underline" id="titleLine"></div>
+    </div>
+
+    <!-- Scene 5: CTA -->
+    <div class="cta-wrap" id="cta">
+      <div class="cta-glow"></div>
+      <button class="cta-entrar" id="entrarBtn">Entrar</button>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════
+    // PARTICLE SYSTEM (Canvas 2D — lightweight)
+    // ═══════════════════════════════════════════════════
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let W, H, particles = [];
+    const PARTICLE_COUNT = window.innerWidth < 430 ? 40 : 80;
+
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * W;
+        this.y = Math.random() * H;
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = -Math.random() * 0.4 - 0.1;
+        this.r = Math.random() * 1.5 + 0.5;
+        this.life = Math.random();
+        this.maxLife = Math.random() * 0.6 + 0.4;
+        // Color mix: blue / cyan / gold particles
+        const roll = Math.random();
+        if (roll < 0.5) this.color = [43, 143, 217]; // morpho blue
+        else if (roll < 0.8) this.color = [94, 196, 232]; // cyan
+        else this.color = [196, 150, 60]; // gold
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life += 0.003;
+        if (this.life > this.maxLife || this.y < -10 || this.x < -10 || this.x > W + 10) this.reset();
+      }
+      draw() {
+        const alpha = Math.sin((this.life / this.maxLife) * Math.PI) * 0.5;
+        const [r, g, b] = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, W, H);
+      particles.forEach(p => { p.update(); p.draw(); });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // ═══════════════════════════════════════════════════
+    // SCENE SEQUENCER
+    // ═══════════════════════════════════════════════════
+    const $ = id => document.getElementById(id);
+    const cocoon = $('cocoon');
+    const butterfly = $('butterfly');
+    const lightBurst = $('lightBurst');
+    const titleWrap = $('title');
+    const titleText = $('titleText');
+    const titleLine = $('titleLine');
+    const ctaWrap = $('cta');
+    const skipBtn = $('skipBtn');
+    const entrarBtn = $('entrarBtn');
+
+    // Build title characters
+    const word = 'Metamorfosis';
+    word.split('').forEach((ch, i) => {
+      const span = document.createElement('span');
+      span.className = 'char';
+      span.textContent = ch;
+      span.style.animationDelay = `${i * 0.08}s`;
+      titleText.appendChild(span);
+    });
+
+    let skipTriggered = false;
+
+    // Timeline
+    function runScene() {
+      // Scene 1-2: Cocoon visible for 3s, then dissolve
+      setTimeout(() => {
+        if (skipTriggered) return;
+        cocoon.classList.add('dissolve');
+      }, 3000);
+
+      // Scene 3: Butterfly emerges at 3.5s
+      setTimeout(() => {
+        if (skipTriggered) return;
+        cocoon.style.display = 'none';
+        butterfly.classList.add('reveal');
+        lightBurst.classList.add('active');
+      }, 3800);
+
+      // Scene 4: Title at 5.5s
+      setTimeout(() => {
+        if (skipTriggered) return;
+        butterfly.classList.add('hovering');
+        titleWrap.classList.add('assemble');
+        document.querySelectorAll('.char').forEach((ch, i) => {
+          setTimeout(() => ch.classList.add('visible'), i * 80);
+        });
+        titleLine.classList.add('extend');
+      }, 5500);
+
+      // Scene 5: CTA at 7s
+      setTimeout(() => {
+        if (skipTriggered) return;
+        ctaWrap.classList.add('show');
+      }, 7000);
+    }
+
+    // Skip to end
+    function skipToEnd() {
+      skipTriggered = true;
+      cocoon.style.display = 'none';
+      butterfly.style.opacity = '1';
+      butterfly.style.transform = 'scale(1)';
+      butterfly.style.filter = 'none';
+      butterfly.classList.add('hovering');
+      lightBurst.style.opacity = '0.3';
+      lightBurst.style.transform = 'translate(-50%,-50%) scale(1)';
+      titleWrap.style.opacity = '1';
+      document.querySelectorAll('.char').forEach(ch => {
+        ch.style.opacity = '1';
+        ch.style.transform = 'translateY(0)';
+        ch.style.filter = 'blur(0)';
+      });
+      titleLine.style.width = '180px';
+      ctaWrap.style.opacity = '1';
+    }
+
+    skipBtn.addEventListener('click', skipToEnd);
+    entrarBtn.addEventListener('click', () => {
+      // Radial wipe transition
+      document.body.style.transition = 'opacity 0.6s ease';
+      document.body.style.opacity = '0';
+      setTimeout(() => {
+        alert('→ Navigates to Onboarding Step 1 (Name input)');
+      }, 700);
+    });
+
+    // Start the show
+    runScene();
+  </script>
+</body>
+</html>
